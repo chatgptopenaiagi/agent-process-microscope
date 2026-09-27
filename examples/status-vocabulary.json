@@ -1,0 +1,11 @@
+{
+  "synthetic_fixture": true,
+  "format": "documentation-only, not an APM event stream",
+  "cases": [
+    {"illustrated_status": "observed", "fictional_case": "A selected process identity was returned by an OS observer.", "limit": "Its intent and file attribution remain unknown."},
+    {"illustrated_status": "inferred", "fictional_case": "A recognized direct pytest command suggests TESTING.", "limit": "No assertion counts are inferred."},
+    {"illustrated_status": "synthetic", "fictional_case": "The demonstration presents a made-up test failure.", "limit": "This is not evidence of an actual failed test."},
+    {"illustrated_status": "unknown", "fictional_case": "A previously observed process identity is no longer present.", "limit": "Its exit code was not captured."},
+    {"illustrated_status": "unavailable", "fictional_case": "Access to the selected process metadata was denied.", "limit": "Missing observation does not prove inactivity."}
+  ]
+}

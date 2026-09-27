@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "session_id": "00000000-0000-4000-8000-000000000001",
+  "agent": "fictional-demo-agent",
+  "mode": "demo",
+  "status": "stopped",
+  "synthetic": true,
+  "workspace": "C:\\Example\\Project",
+  "started_at": "2026-01-01T00:00:00Z",
+  "stopped_at": "2026-01-01T00:00:05Z",
+  "event_count": 6,
+  "provenance": "Authored fictional publication fixture; not copied from a recording."
+}

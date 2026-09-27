@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:apm:event:1.0",
+  "title": "APM canonical event 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_id", "timestamp", "session_id", "agent_id", "source", "category", "action", "target", "status", "confidence", "interpretation_level", "raw_reference", "metadata"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "event_id": {"type": "string", "format": "uuid"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "session_id": {"type": "string", "format": "uuid"},
+    "agent_id": {"type": "string"},
+    "source": {"type": "string"},
+    "category": {"enum": ["agent", "process", "command", "filesystem", "file", "git", "test", "browser", "network", "system", "tool", "verification", "error", "session"]},
+    "action": {"enum": ["START", "STOP", "OPEN", "READ", "WRITE", "CREATE", "DELETE", "RENAME", "EXECUTE", "CLICK", "TYPE", "NAVIGATE", "REQUEST", "RESPONSE", "PASS", "FAIL", "VERIFY", "WAIT", "UNKNOWN", "SNAPSHOT", "SAMPLE", "UPDATE"]},
+    "target": {"type": "string"},
+    "status": {"enum": ["observed", "inferred", "unknown", "unavailable", "synthetic"]},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "interpretation_level": {"enum": ["observation", "inference", "synthetic"]},
+    "raw_reference": {"type": ["string", "null"]},
+    "metadata": {"type": "object"}
+  },
+  "allOf": [
+    {"if": {"properties": {"status": {"const": "synthetic"}}}, "then": {"properties": {"interpretation_level": {"const": "synthetic"}}}},
+    {"if": {"properties": {"status": {"const": "inferred"}}}, "then": {"properties": {"interpretation_level": {"const": "inference"}}}}
+  ]
+}

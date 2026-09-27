@@ -1,0 +1,31 @@
+.venv/
+__pycache__/
+*.py[cod]
+sessions/
+.apm-sessions/
+reports/
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+*.log
+cache/
+*.lnk
+
+# Machine-local Genesis evidence and historical execution notes.
+/GENESIS_MANIFEST.json
+/CONTRACT.md
+/PROGRESS.md
+/TEST_REPORT.md
+
+# Credentials and private local configuration.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+credentials*.json
+auth.json
+.codex/

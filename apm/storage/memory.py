@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import sqlite3
 import threading
+import time
 from contextlib import closing, contextmanager
 from uuid import UUID, uuid4
 
@@ -94,6 +95,34 @@ class Memory:
     def close(self):
         with self.lock:
             self.db.close()
+
+    @classmethod
+    def read_snapshot(cls, path, *, cancelled=lambda: False):
+        """Private in-memory copy of a read-only source; no writable source handle.
+
+        Bounds deliberately refuse oversized reviews instead of truncating them.
+        SQLite may use shared-memory coordination for a live WAL source.
+        """
+        snapshot = sqlite3.connect(':memory:', check_same_thread=False)
+        deadline = time.monotonic() + 60
+        def progress(_status, _remaining, total):
+            if cancelled() or time.monotonic() > deadline:
+                raise ValueError('review_cancelled_or_timed_out')
+            if total * page_size > 256 * 1024 * 1024:
+                raise ValueError('review_database_exceeds_256_mib')
+        try:
+            with cls(path, readonly=True) as source:
+                page_size = source.db.execute('PRAGMA page_size').fetchone()[0]
+                source.db.backup(snapshot, pages=256, progress=progress, sleep=.01)
+            snapshot.row_factory = sqlite3.Row
+            snapshot.execute('PRAGMA query_only=ON')
+            result = cls.__new__(cls)
+            result.path, result.db = Path(path).resolve(), snapshot
+            result.lock = threading.RLock()
+            return result
+        except BaseException:
+            snapshot.close()
+            raise
 
     def __enter__(self):
         return self

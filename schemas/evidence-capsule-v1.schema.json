@@ -1,0 +1,443 @@
+{
+  "type": "object",
+  "properties": {
+    "manifest": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "apm-evidence-capsule"
+        },
+        "version": {
+          "const": 1,
+          "type": "integer"
+        },
+        "case_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f-]{36}$",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "session_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f-]{36}$",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "maxLength": 40
+        },
+        "canonicalization": {
+          "const": "apm-json-v1"
+        },
+        "algorithm": {
+          "const": "sha256"
+        },
+        "records_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        },
+        "record_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "apm-sqlite-v1"
+            },
+            "database_tip": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            },
+            "database_records": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000
+            },
+            "session_records": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "verification": {
+              "const": "exporter-checked-unkeyed-chain"
+            }
+          },
+          "required": [
+            "kind",
+            "database_tip",
+            "database_records",
+            "session_records",
+            "verification"
+          ],
+          "additionalProperties": false
+        },
+        "disclosure": {
+          "type": "object",
+          "properties": {
+            "policy": {
+              "type": "string",
+              "enum": [
+                "minimal-v1",
+                "text-v1"
+              ]
+            },
+            "human_records": {
+              "type": "string",
+              "enum": [
+                "included",
+                "omitted"
+              ]
+            },
+            "omitted_records": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "omitted_fields": {
+              "const": [
+                "agent_id",
+                "principal",
+                "process_identifiers",
+                "structured_path_metadata",
+                "unlisted_metadata",
+                "raw_reference",
+                "confidence"
+              ]
+            }
+          },
+          "required": [
+            "policy",
+            "human_records",
+            "omitted_records",
+            "omitted_fields"
+          ],
+          "additionalProperties": false
+        },
+        "missing_references": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "minLength": 36,
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "maxItems": 100000,
+          "uniqueItems": true
+        },
+        "limitations": {
+          "const": [
+            "UNSIGNED",
+            "SOURCE_AUTHENTICITY_UNKNOWN",
+            "COLLECTION_COMPLETENESS_UNKNOWN",
+            "SOURCE_CHAIN_NOT_REVERIFIED",
+            "NO_CAUSATION_OR_LEGAL_CUSTODY_PROOF",
+            "NO_EXTERNAL_ARTIFACT_PAYLOADS",
+            "NO_EXECUTION_AUTHORITY"
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "version",
+        "case_id",
+        "session_id",
+        "created_at",
+        "canonicalization",
+        "algorithm",
+        "records_sha256",
+        "record_count",
+        "source",
+        "disclosure",
+        "missing_references",
+        "limitations"
+      ],
+      "additionalProperties": false
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "arrival": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "event_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "minLength": 36,
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "stream": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "minLength": 36,
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "missing_before": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "host",
+              "reporter",
+              "local-human",
+              "local-investigator"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "codex",
+              "process",
+              "filesystem",
+              "git",
+              "system",
+              "local-investigator",
+              "human-decision",
+              "fixture",
+              "other"
+            ]
+          },
+          "evidence_class": {
+            "type": "string",
+            "enum": [
+              "OBSERVED",
+              "AGENT_REPORTED",
+              "HUMAN_RECORDED",
+              "INFERRED",
+              "SYNTHETIC",
+              "UNKNOWN",
+              "UNAVAILABLE"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "agent",
+              "browser",
+              "command",
+              "error",
+              "file",
+              "filesystem",
+              "git",
+              "network",
+              "process",
+              "session",
+              "system",
+              "test",
+              "tool",
+              "verification"
+            ]
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "CLICK",
+              "CREATE",
+              "DELETE",
+              "EXECUTE",
+              "FAIL",
+              "NAVIGATE",
+              "OPEN",
+              "PASS",
+              "READ",
+              "RENAME",
+              "REQUEST",
+              "RESPONSE",
+              "SAMPLE",
+              "SNAPSHOT",
+              "START",
+              "STOP",
+              "TYPE",
+              "UNKNOWN",
+              "UPDATE",
+              "VERIFY",
+              "WAIT",
+              "WRITE"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "inferred",
+              "observed",
+              "synthetic",
+              "unavailable",
+              "unknown"
+            ]
+          },
+          "event_timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "maxLength": 40
+          },
+          "timestamp_basis": {
+            "type": "string",
+            "enum": [
+              "client_receipt_time",
+              "import_time",
+              "unknown"
+            ]
+          },
+          "source_time": {
+            "type": "null"
+          },
+          "clock_uncertainty_ms": {
+            "type": "null"
+          },
+          "source_fingerprint": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "minLength": 64,
+            "maxLength": 64
+          },
+          "target": {
+            "type": "string",
+            "maxLength": 8192
+          },
+          "attributes": {
+            "type": "object",
+            "properties": {
+              "checkpoint": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$",
+                "minLength": 64,
+                "maxLength": 64
+              },
+              "codex_event": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]{1,80}$",
+                "maxLength": 80
+              },
+              "comparison_key": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]{1,80}$",
+                "maxLength": 80
+              },
+              "decision": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]{1,80}$",
+                "maxLength": 80
+              },
+              "exit_code": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 4294967295
+              },
+              "item_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]{1,80}$",
+                "maxLength": 80
+              },
+              "through_arrival": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "algorithm": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]{1,80}$",
+                "maxLength": 80
+              },
+              "inspected": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "truncated": {
+                "type": "boolean"
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f-]{36}$",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "maxItems": 100,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "arrival",
+          "event_id",
+          "stream",
+          "sequence",
+          "missing_before",
+          "origin",
+          "source",
+          "evidence_class",
+          "category",
+          "action",
+          "status",
+          "event_timestamp",
+          "received_at",
+          "timestamp_basis",
+          "source_time",
+          "clock_uncertainty_ms",
+          "source_fingerprint",
+          "target",
+          "attributes",
+          "references"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 1000
+    }
+  },
+  "required": [
+    "manifest",
+    "manifest_sha256",
+    "records"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "APM Evidence Capsule v1",
+  "$comment": "Structural schema only. capsule.py additionally enforces checksums, sequence/classification, count/citation/disclosure consistency, canonical UUIDs and sanitization. Maximum file size: 4194304 bytes. No network schema fetching is performed."
+}

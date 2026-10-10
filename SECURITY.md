@@ -75,3 +75,64 @@ screenshots as well as obvious tokens. APM's pattern redaction is not permission
 to publish an arbitrary recording. Share a deliberately synthetic example whenever
 possible. Keep generated recordings, local reports, environments and exports out
 of commits; do not bypass ignore rules to attach real sessions to a pull request.
+
+## Capsule and cognitive investigation threat model
+
+The offline capsule boundary accepts hostile bytes, not trusted instructions.
+Import creates a bounded read-only context and no database rows, files, network
+connections, subprocesses or permission grants. Its native viewer explicitly labels
+source classes as exporter declarations. No observation engine or protected Codex
+component is modified. See [the contract](docs/CAPSULES.md).
+
+| Threat | Implemented control and remaining limit |
+|---|---|
+| Tampered payload/manifest | Recompute both SHA-256 checksums and reject mismatch; an attacker can recompute unkeyed checksums, so source authenticity remains unknown. Optional external whole-file digest detects replacement |
+| Fabricated evidence/provenance | Closed schema, class/sequence/count/reference consistency; declared provenance never becomes a receiving-host observation. These checks cannot establish truth |
+| Archive traversal/bombs/duplicate entries | All archives rejected as unsupported JSON before extraction; no archive loader or remote payload fetch exists |
+| Malformed metadata/resource exhaustion | 4-MiB bounded read, depth 12, 1,000 source records, 100 citations/record, integer/UUID/text bounds and duplicate-key rejection. Native import is synchronous within these small bounds; no adversarial latency SLA |
+| Sensitive disclosure | Minimal allowlist strips free text and human records by default. Separate explicit flags opt in. UUIDs/timestamps/digests remain disclosed; pattern redaction is best effort and manual sharing review is still required |
+| Prompt injection/confused deputy | Text only; no execution, model call, interpreter, action grant or network access in capsule APIs. Human opinions and proposed checks confer no authority |
+| Replayed/duplicate capsule | No ledger insertion or execution side effect; same-session comparison refused. There is no federated replay-protection protocol yet |
+| False matches/causal overclaim | Explicit source/class/task grouping, scoped citations, alternatives, gaps, truncation and INSUFFICIENT EVIDENCE. Synthetic and reported classes do not form one contradiction group |
+| Evidence overwrite/corruption | Exclusive new export file; read-only source snapshot; import never writes source or an extraction tree. Interrupted output may remain partial and must fail verification |
+| Supply-chain compromise | No added runtime dependency; public structural schema and stdlib validator. Signing, SBOM generation and independently tested distribution remain separate work |
+| Unauthorized providers/remote monitoring/cost | No provider, remote pairing or paid request implemented. Future bridges must default off with explicit credentials, budget, cancellation and permission scopes |
+| Database incompatibility | Existing SQLite/Genesis formats unchanged; capsule version/algorithm is closed and unsupported versions fail explicitly |
+
+New tests exercise malformed JSON/archives, rehashed structural lies, unsigned
+replacement versus external digest, no overwrite, missing references, source
+preservation and citation resolution. A professional interface or a passing local
+test does not establish laboratory certification, legal custody or complete
+coverage. Keys, trust roots, peer pairing and revocation are not activated.
+
+## Holmes journal boundary
+
+Hypotheses and reviews append to a separate, explicitly selected SQLite journal.
+Sources remain read-only. A citation binds capsule digest, session and event;
+dangling support/contradiction citations are rejected, while missing evidence has
+an explicit representation. Declared agent responses cannot submit human review
+through the API. A caller's HUMAN_RECORDED declaration is not proof of identity.
+Synthetic automated reviews are labeled and cannot promote patterns matching real
+evidence classes. Every entry retains `execution_authority: NONE`.
+
+Unique request IDs prevent duplicate append effects; expected revisions reject
+stale edits. Transactions and online backup preserve committed history. Append-only
+triggers protect against accidental updates/deletes, not an owner rewriting the
+database. Unkeyed chains, format/index checks and optional expected tips detect
+changes within their stated scope; neither journal nor capsule checks authenticate
+provenance. Reports verify/read one snapshot to avoid a concurrent-append tip race.
+
+Imported journal text is rechecked for redaction before display. Byte, count, schema,
+SQL length, lock and verification limits bound work. No attached databases or
+extension loading is enabled. The GUI has one active worker job and no growing
+submission queue. Full hostile-file latency and maximum-size benchmarks remain
+unqualified. Backups and reports use new destinations; interrupted files can remain
+incomplete and must be rejected or reviewed, never silently reused as valid output.
+
+HTML escapes evidence and uses generated fragment links, a restrictive CSP and no
+scripts/external assets. Reports exclude raw sessions and event free text, but
+user-authored claims and identifying metadata may still be private. Export is not
+publication authorization. Pattern matching is explicit and source-class scoped;
+later adverse reviews suspend old patterns. Agreement between offline assessment
+messages is not proof. No paid provider, network connection, credential reader,
+remote execution, automatic investigation check or action-grant API is introduced.

@@ -125,10 +125,316 @@ relationships, indexed failure comparisons, provider consent UI, MCP, stronger
 OS capability-file isolation, Windows 11 qualification, timed SQL replay, extended
 overload testing and installer delivery.
 
-**Next exact task:** implement a read-only qualification review in native Memory /
-Ask that pages the entire selected session, resolves saved finding citations and
-shows independent host evidence beside agent reports, while explicitly identifying
-unknown account identity and command-to-PID attribution. Validate it against a
-sanitized synthetic fixture and the locally retained successful session without
-modifying that recording; complete visible native GUI inspection before adding
-any bidirectional instruction channel.
+## Native qualification review follow-up — 2026-10-10
+
+The next implementation is complete locally: a separate read-only native window
+opens an explicitly selected database, verifies a bounded consistent snapshot,
+pages the complete selected session, summarizes all its records and resolves saved
+investigation citations across pages. It presents whole-database and session chain
+tips, saved checkpoint matches/mismatches, evidence classes and unknowns. The
+original Memory / Ask window, last-100 investigation algorithm, Genesis observers,
+receiver and replay behavior are preserved. See [review design](OBSERVATORY.md#read-only-qualification-review).
+
+Remote inspection confirmed PR #1 remains open with four commits, head
+`ab019da0d2c970efab80fe4878b7f2ec55cb9370`, targeting unchanged `main` at
+`717aaa50c592d92e7369711567374c5c801f7f2b`. The primary workspace still has the
+previous uncommitted checkpoint; new changes are additive local work. No commit,
+push, merge, release or repository-setting change was made in this follow-up.
+
+| Verification | Current result |
+|---|---|
+| Required standard unittest command | 98 tests in 36.774 s; 1 failure, 97 error entries; restricted-token temporary-directory failures remain |
+| Documented compatibility runner | 98 tests passed in 54.567 s; zero failures/errors/skips |
+| New sanitized review tests | Nine tests cover full pagination, consistent snapshots during fixture writes, read-only enforcement, citations and scope isolation, missing evidence/checkpoint mismatch, contradictory reports, item reuse across turns, tampering/expected-tip failure, empty/missing databases, bounds, cancellation and native widgets |
+| Retained owner session through new reviewer | 108 records, pages 100 + 8; 5 Codex reports, one reported failed command, one completed-turn report; 81 host process-generation records including 68 child records |
+| Retained evidence classes | 91 OBSERVED, 5 AGENT_REPORTED, 2 INFERRED, 8 UNKNOWN, 2 UNAVAILABLE |
+| Saved investigations and integrity | Two saved investigations; all 21 references resolved; no missing references or checkpoint mismatches; whole snapshot verified against the separately retained final tip |
+| Read-only acceptance | Database and WAL hashes unchanged before/after backend and GUI review; review worker stopped |
+| Native GUI | Real withdrawn Tk widgets displayed both owner-session pages and opened all 21 citations; synthetic fixture also exercised Previous/Next and end-of-session controls |
+| Visible GUI inspection | Not completed: required Computer Use `node_repl` runtime unavailable; automated widget acceptance is not visual acceptance |
+
+These are new measurements, not replacements for the earlier 89-test checkpoint
+or its evidence. Local final results are preserved in ignored
+`reports/LOCAL_VERIFICATION_ARTIFACT`,
+`reports/LOCAL_VERIFICATION_ARTIFACT` and
+`reports/LOCAL_VERIFICATION_ARTIFACT`. The explicit acceptance
+script is [check_qualification_review.py](../scripts/check_qualification_review.py).
+It does not launch Codex or write investigation records. No new authenticated
+workload was needed, and the protected engine/configuration/authentication were
+not changed or invoked.
+
+A fresh standalone temporary-directory diagnostic again reported a restricted
+token, no APM imports and no ACL changes. Direct `mkdir(0700)` and stdlib temporary
+directories could be created but denied child writes/scans/removal; inherited
+`mkdir(0777)` fixtures succeeded. This supports an environment/access-control
+explanation, not an APM runtime regression. The process-local compatibility runner
+does not turn the failed standard command into a pass. No security controls were
+weakened. A development-only test connection cleanup error was corrected before
+the final results above.
+
+Read-only review uses an in-memory copy up to 256 MiB of SQLite pages, with
+60-second copy and initial verification bounds. It is a fixed snapshot, not a live
+view; reopening refreshes it. SQLite can coordinate live WAL readers through
+shared-memory sidecars. Same-item final-outcome conflicts are a limited inference;
+missing turn boundaries and other contradictions may remain unknown. Unkeyed
+hashes do not authenticate event sources, accounts or command attribution, and
+this feature does not provide bidirectional cooperation.
+
+The [distribution assessment](DISTRIBUTION.md) records installed tools, source
+packaging gaps and executable/installer/wheel/release acceptance requirements.
+No downloadable product was built or published.
+
+Relative to the published checkpoint, five files were added:
+`apm/storage/review.py`, `apm/ui/qualification_window.py`,
+`scripts/check_qualification_review.py`, `tests/test_review.py` and
+`docs/DISTRIBUTION.md`. Eight existing files were updated:
+`apm/storage/memory.py`, `apm/ui/main_window.py`, `apm/observatory/cli.py`,
+`README.md`, `docs/ARCHITECTURE.md`, `docs/ENGINEERING_PROGRESS.md`,
+`docs/OBSERVATORY.md` and `docs/WORKSTATION_CAPABILITIES.md`. The local content
+audit covered these 13 files and resolved 51 local Markdown links; scans found
+no credential patterns or owner-session identifiers in these source/doc changes.
+Generated acceptance/test reports remain ignored. This was a local content audit,
+not authorization or a staged audit for a future publication.
+
+**Next proposed at the native-review checkpoint (superseded by the capsule mission below):** introduce tested per-user data defaults for installed APM
+while preserving source-workspace defaults and explicit evidence paths; then
+build a local Windows x64 one-folder bundle and developer wheel using an isolated,
+pinned toolchain. Complete visible review inspection and clean-machine artifact
+tests before claiming GUI/distribution acceptance. Do not add a bidirectional
+instruction channel or publish artifacts under this local-only checkpoint.
+
+## Beyond the Microscope: offline evidence and comparison — 2026-10-10
+
+Phase 0 reconciled the actual workspace against the previous local review audit:
+its 13 source/document fingerprints matched before new work. PR #1 was still open
+with its original four commits and unchanged head/base. The protected executable's
+read-only SHA-256 matched the retained qualification hash; it was not invoked.
+The existing packaging assessment was reused; no tool/dependency was installed.
+
+Phase 1 is preserved and verified. The retained successful owner session again
+passed the existing read-only acceptance harness: 108 records in pages 100 + 8,
+five Codex reports, one failed-command report, one completed-turn report, 81 host
+process-generation records and 68 child records. Both saved investigations and
+all 21 citations resolved against the recorded final chain tip. Database/WAL
+hashes remained unchanged and the worker stopped. The owner evidence was not
+exported, and no new authenticated Codex workload was run. Result:
+`reports/LOCAL_VERIFICATION_ARTIFACT` (ignored).
+
+Phase 2 now has working [Evidence Capsules v1](CAPSULES.md): a versioned closed
+JSON schema, selected-session export, explicit redaction/disclosure, two internal
+SHA-256 checks, optional external file-digest check, isolated read-only import,
+cross-page citation lookup and a native viewer. Minimal disclosure excludes free
+text and human records by default. Findings retain algorithm/window/truncation
+metadata. Source declarations and original fingerprints are not elevated to
+authenticated provenance. All archives are rejected; no extraction path exists.
+
+An initial Phase 3 slice compares two explicitly selected sessions using exact
+source/class/task groups and reported outcomes. It supplies scoped supporting
+citations, alternatives, unknowns and proposed checks, flags incompatible outcomes
+within a declared item/turn, and retains INSUFFICIENT EVIDENCE for a shared cause.
+Synthetic and reported classes are separated. This does **not** implement persistent
+semantic patterns, human-validated adaptation, causal discovery or multi-agent
+cooperation. The [architecture map](COGNITIVE_ARCHITECTURE.md) and
+[standards ADR](decisions/0001-capsules.md) distinguish these later gates.
+
+### Final verification
+
+| Check | Result |
+|---|---|
+| Required standard suite | 112 tests in 57.979 s; 1 failure, 97 error entries; existing restricted-token temporary-directory failure pattern |
+| Compatibility suite | 112 tests passed in 75.011 s; zero failures/errors/skips |
+| New capsule tests | 14 tests covering round-trip/disclosure, independent stdlib digest verification in an isolated interpreter, copy-returning read-only context, source preservation, opt-ins/redaction, tampering and external digest, rehashed structural lies, malformed JSON/archives, missing references, bounds/no overwrite, comparisons/false matches, native paging/citations, schema correspondence, inert instruction text, oversized sessions, synthetic separation and controlled CLI errors |
+| Original native review | Complete owner session and 21 citations passed as above; no original database changes |
+| Visible inspection | Still unavailable: no Computer Use `node_repl` runtime; actual withdrawn Tk widgets are automated acceptance only |
+
+Final logs are `reports/LOCAL_VERIFICATION_ARTIFACT` and
+`reports/LOCAL_VERIFICATION_ARTIFACT`; earlier interim measurements
+were retained. The standard failure remains a real failed command, not a pass
+renamed by the compatibility runner. No ACLs, global Python settings, global
+agent configuration or protected dependencies were changed. Existing standalone
+tempdir diagnostic evidence remains applicable; new capsule tests use fresh
+ignored inherited-access fixtures.
+
+### Synthetic round-trip and resource evidence
+
+The final `scripts/capsule_demo.py --records 996` run created two synthetic sessions
+with 1,998 total SQLite records. Each exported capsule contains 998 records and
+explicitly omits one human-opinion fixture. The two primary files are 683,320 and
+684,427 bytes. A fresh process verified the first capsule against its retained
+file digest; the independent stdlib digest implementation is covered separately
+by the unit suite. The original synthetic database hash was unchanged.
+
+Native widgets visited nine 100-record pages and one 98-record page, opened all
+99 saved citations and rendered the two-session comparison. It found the designed
+shared outcome group and one within-session contradictory group. Matching evidence
+references resolve to their respective capsules; the result still states
+INSUFFICIENT EVIDENCE for a shared cause. The saved finding retains its original
+last-100 inspection scope; export does not claim that finding inspected all 998
+records. Visible GUI acceptance remains unverified.
+
+Six timed exports and six imports (three per session, with Python `tracemalloc`
+enabled) measured median export 2.455 s and import 0.240 s. A separate comparison
+took 0.0189 s. Python-traced peak allocation was 9,554,755 bytes; sampled process
+RSS ranged from 29,294,592 to 47,239,168 bytes. These are different metrics: native
+SQLite allocations are excluded from Python tracing, and sampled RSS is not a
+guaranteed peak. The workload used Python 3.14.7 on Windows AMD64, 12 logical CPUs
+and approximately 63.4 GiB reported RAM, with local repository storage. Storage
+hardware/cache behavior was not separately qualified. This is a small synthetic
+measurement, not operational Codex throughput, a clean-lab benchmark or a latency
+guarantee. Broader observation/recovery measurements from earlier checkpoints are
+not replaced by these capsule timings.
+
+Local artifacts and aggregate results are retained under
+`reports/LOCAL_VERIFICATION_ARTIFACT`; the command log
+is `reports/LOCAL_VERIFICATION_ARTIFACT`. This directory contains the actual
+synthetic capsules, comparison output and verification metrics, all ignored by Git.
+Earlier 120-record and interim 996-record measurements remain preserved separately.
+
+### Local changes and remaining work
+
+Added `apm/evidence/{__init__,capsule,compare,cli}.py`,
+`apm/ui/capsule_window.py`, `tests/test_capsule.py`, `scripts/capsule_demo.py`,
+`schemas/evidence-capsule-v1.schema.json`, `docs/CAPSULES.md`,
+`docs/COGNITIVE_ARCHITECTURE.md` and `docs/decisions/0001-capsules.md`.
+Updated the CLI and main-window entry points, `.gitignore`, README, ROADMAP,
+SECURITY, architecture and this progress document. The new capsule extension is
+ignored so local exports cannot be accidentally staged through ordinary Git use.
+No source history, existing evidence or old formats were rewritten. All changes
+remain local and uncommitted; no branch/ref, PR, repository setting or release
+was changed.
+
+Important limits: capsules are unsigned, limited to 1,000 source-session records
+and 4 MiB, and cannot reverify the original chain from redacted receipts. Their
+checksums do not prove identity, truth, completeness or legal custody. Imported
+clock uncertainty remains unknown. Comparison labels are deterministic clues,
+not proof of the same command or cause. Full semantic memory, forensic adapters,
+federation, provider cooperation, signing/key management and downloadable products
+remain unimplemented. No private keys, provider credentials or paid API calls were
+used. The existing source-only Windows launch route remains the tested delivery.
+
+**Next exact task:** implement an append-only hypothesis and human-review journal
+separate from raw observations. Bind each claim/review to capsule digests and
+resolvable supporting/contradicting references; preserve alternatives, missing
+evidence, correction history and INSUFFICIENT EVIDENCE. Test stale/missing citations
+and prove that approving a hypothesis neither edits source evidence nor grants
+execution authority. Human-reviewed semantic pattern promotion follows that
+boundary; packaging remains the independent later track described in
+[DISTRIBUTION.md](DISTRIBUTION.md).
+
+## Holmes Protocol checkpoint — 2026-10-10
+
+### Baseline and preservation
+
+Before edits, all 19 files in the prior capsule audit matched their recorded
+SHA-256 values. The two integration source files were copied into a new ignored
+baseline directory before modification. Existing pending work was preserved.
+The root remains `main` at `717aaa50c592d92e7369711567374c5c801f7f2b`.
+A read-only GitHub check found PR #1 open and unmerged, with four commits and head
+`ab019da0d2c970efab80fe4878b7f2ec55cb9370`. No Git ref, commit, index, remote,
+repository setting or release was changed. Current Holmes extensions remain local.
+
+The protected executable's SHA-256 matched the retained owner qualification at
+baseline. No Codex executable was launched; no installation, supporting component,
+authentication, global configuration, plugin or MCP setting was modified. The
+historical authenticated workload was reused, not repeated.
+
+### Working implementation
+
+Added the `apm.holmes` package: bounded capsule-reference catalog, schema-1
+append-only SQLite journal, deterministic skeptical challenges, HTML/JSON reports,
+versioned exact-match pattern retrieval and an offline assessment protocol.
+Hypotheses retain supporting/contrary citations, alternatives, missing evidence,
+proposed checks, uncertainty, declared producer and review state. Exact retries
+deduplicate; conflicting requests and stale revisions fail. Corrections, rejection,
+supersession and claim revisions preserve prior states. An interrupted transaction
+recovers the committed prefix. Backup uses a new destination and verifies its chain.
+
+The functional native Holmes Lab opens journals and multiple capsules, stages
+support/contradictory records, creates hypotheses, resolves saved references,
+generates challenges, records/corrects assessments, reopens full history, retrieves
+reviewed patterns and exports reports. File/SQL work uses one worker and bounded
+submission. The ordinary Genesis, Memory/Ask, qualification and capsule windows
+remain present. Report checks and history share one snapshot, including under a
+concurrent writer. Reports escape HTML and contain cited metadata rather than raw
+source sessions. Neither human review nor a proposed check grants execution rights.
+
+Pattern activation requires a supporting review and a matching, resolvable example.
+Explicit source/class requirements prevent mixing synthetic and reported cases.
+Versions, retirement/reactivation and review provenance persist; an adverse later
+review suspends matching. Synthetic review fixtures cannot activate patterns for
+real evidence classes. Pattern administration remains a Python API, with retrieval
+in the GUI. A general validation registry and promotion editor are not implemented.
+
+After journal/widget checks passed, a bounded provider-neutral response contract
+and synthetic two-role demonstration were added. Scope, citations, duplicate IDs,
+byte/time/token declarations and authority fields are validated. This is not a
+real two-agent/model workflow, provider integration or authenticated communication.
+
+### Verification
+
+| Check | Current observed result |
+|---|---|
+| Documented compatibility runner | **130 tests passed**, 84.500 s, no failures/errors/skips |
+| Unmodified standard unittest command | **130 tests**, 67.548 s, **1 failure and 97 error entries** |
+| New Holmes coverage | 18 tests cover scope/invalid citations, duplicate/stale requests, append-only history, correction/rejection/supersession, interruption, backup/tamper checks, snapshots, source preservation, reports, patterns, offline assessment validation and native widgets |
+| Fresh Python process | Two synthetic capsules opened, opposing citations resolved, hypothesis/challenge/review/correction appended, four revisions reopened, backup tip checked, new HTML/JSON reports produced |
+| Independent parent check | Recomputed journal SHA-256 chain without the Holmes verifier; source database and both capsule hashes unchanged |
+| Native Holmes widgets | Actual withdrawn Tk widgets exercised creation, opposing references, saved citation lookup, challenge, review/correction, report, reopen, history selection and pages of 100 + 5 records; worker threads stopped |
+| Labeled pattern fixture | 1 true positive, 6 true negatives, 0 false positives/negatives; additional counterexample, optional-difference and retirement/correction tests passed. This tiny fixture does not establish operational accuracy |
+| Retained owner review | 108 integrity-verified records; 5 public reports, 1 reported failure, 1 completed turn, 81 host process and 68 child-generation records; pages 100 + 8; 21 citations opened; expected tip matched; database/WAL unchanged |
+| Visible/manual GUI acceptance | **UNVERIFIED**: required Computer Use runtime unavailable; automated widgets are not visual approval |
+
+The standard command's environmental failure pattern remains distinct from the
+compatibility pass. A new diagnostic, with no APM imports, again found a restricted
+token: `os.mkdir(0700)` and `tempfile.mkdtemp` allowed creation but denied child
+writes/scans/removal, while inherited `0777` directory operations passed. No ACL,
+global security policy or Python configuration was changed. The compatibility
+runner changes only its process-local fixture directory creation within APM.
+
+Two defects found during development were fixed before final verification: an
+unclosed SQLite handle in a test cleanup, and a pattern optional-difference counter
+that incorrectly passed mapping values to `Counter.update`. These were test/application
+defects, respectively, not attributed to the Windows temporary-directory issue.
+Interim logs are retained; final measurements above supersede no historical result.
+
+Local evidence (ignored, not publication candidates):
+
+- `reports/LOCAL_VERIFICATION_ARTIFACT`
+- `reports/LOCAL_VERIFICATION_ARTIFACT`
+- `reports/LOCAL_VERIFICATION_ARTIFACT`
+- `reports/LOCAL_VERIFICATION_ARTIFACT`
+- `reports/LOCAL_VERIFICATION_ARTIFACT`
+- `reports/LOCAL_VERIFICATION_ARTIFACT`
+
+The fresh child measured 0.987 s for its journal/review/reopen/report/backup interval
+on the existing Python 3.14.7 Windows AMD64 workstation. This is one sample with two
+three-record synthetic capsules and four journal entries, excluding fixture creation,
+parent verification and the subsequent cooperation fixture. HTML was 35,330 bytes
+and JSON 36,747 bytes; each contained two cited records and four revisions. No RAM
+peak, maximum-size stress test or operational throughput is claimed.
+
+### Changed files, limits and exact next step
+
+New files: `apm/holmes/{__init__,model,journal,challenge,report,patterns,cooperation,cli}.py`,
+`apm/ui/holmes_window.py`, `scripts/holmes_demo.py`, `tests/test_holmes.py`,
+`docs/HOLMES.md`, and `docs/decisions/0002-holmes-journal.md`.
+Integration edits: `apm/__main__.py`, `apm/ui/main_window.py`.
+Updated README, ROADMAP, LIMITATIONS, SECURITY, architecture, cognitive architecture,
+distribution, workstation capabilities and this progress record. No observation,
+memory, qualification-review or capsule implementation file was rewritten.
+
+Remaining limits include unauthenticated producer/reviewer declarations, unkeyed
+integrity, unknown collection completeness/clocks, no proven command attribution or
+causation, heuristic claim analysis, bounded journals/capsules, no real provider
+cooperation, no visible human GUI acceptance and no tested distributable product.
+Packaging probes still find PyInstaller 6.22.3 and WiX 7.0.0 outside the APM venv;
+no tools were installed and no artifact was built. BUILD, INSTALL, packaged LAUNCH,
+UNINSTALL and installer DATA PRESERVATION remain UNVERIFIED as listed in
+[distribution gates](DISTRIBUTION.md).
+
+**Next exact engineering task:** add a native pattern promotion/validation workflow
+that records labeled validation episodes and counterexamples before activation,
+with explicit review provenance and false-match results. This closes the main
+remaining usability gap in the tested interpretation-to-pattern loop. Owner-visible
+Holmes acceptance remains a separate pending qualification, not a claim this tool
+session can make. [User/API guide](HOLMES.md).

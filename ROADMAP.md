@@ -58,3 +58,23 @@ protocols and external integrations need investigation before implementation cla
 
 Private reasoning inspection, covert monitoring and unrestricted credential capture
 are outside the project's purpose, not future capability milestones.
+# Cognitive observatory follow-up
+
+The native full-session qualification review is implemented and tested locally.
+Capsules v1 now add offline selected-session export, independent content checks,
+isolated read-only review, preserved citations and deterministic two-session
+comparison. Imported provenance remains unverified; comparisons do not establish
+causation. See [measured results](docs/ENGINEERING_PROGRESS.md).
+
+Holmes now persists cited hypotheses, append-only review/correction history and
+explicit insufficient-evidence challenges separately from observations. A bounded
+versioned pattern subset and offline synthetic assessment protocol are implemented.
+Next: add a native pattern promotion/validation workflow with labeled validation
+records, explicit counterexamples and reviewable false-match results. Pattern
+management currently requires the Python API. Real provider cooperation, forensic
+adapters and paired federation remain later gates.
+Distribution still requires per-user storage defaults, isolated builds and clean-
+machine acceptance. No remote publication or release is authorized.
+
+See [component boundaries and phased gates](docs/COGNITIVE_ARCHITECTURE.md) and
+[the capsule architecture decision](docs/decisions/0001-capsules.md).

@@ -123,6 +123,62 @@ exports one JSON page; continue using the last `arrival` as `--after`.
 
 ## Protocol and evidence contract
 
+### Read-only qualification review
+
+Use **Qualification review…** in the main window to explicitly select a database,
+or use the existing isolated Python CLI:
+
+```powershell
+.\.venv\Scripts\python.exe -m apm memory SELECTED_DATABASE --operation review --session SESSION_UUID
+```
+
+An optional `--expected-tip` checks an independently retained chain tip. Without
+it, verification establishes internal consistency only. The separate review window
+does not save Ask, notes or any other record. The existing Memory / Ask workflow
+keeps its prior behavior and its explicitly bounded last-100 investigation rules.
+
+The reviewer opens SQLite with `mode=ro` and `query_only`, copies a consistent
+snapshot into private memory, closes the source connection, and verifies that
+snapshot before displaying evidence. Its snapshot is also query-only. The source
+is never opened writable. SQLite may coordinate through shared memory for live
+WAL databases; this is not a forensic guarantee that no sidecar is touched. The
+retained qualification database and WAL were hash-checked unchanged. Do not use
+SQLite `immutable` mode on an actively written source.
+
+The snapshot is limited to 256 MiB of SQLite pages; copy and initial verification
+each have a 60-second bound. Oversized/invalid inputs fail explicitly rather than
+produce a partial review. All selected-session records contribute to summary
+counts through pages of at most 100; Previous/Next display the complete session
+with visible record ranges and total. The dropdown lists the most recent 100
+sessions and accepts any explicit session UUID. Reopen the window to refresh a
+snapshot; live collection does not silently alter the review.
+
+Selecting a saved investigation reveals its original scope, through-arrival and
+recorded chain tip. Same-session citations resolve to the underlying receipt and
+fingerprint even when they are on another page. Missing/cross-session citations
+stay UNKNOWN. A saved checkpoint mismatch is disclosed separately from the
+database's overall integrity. Failed chain/index/counter/expected-tip checks
+disable evidence display. Display data is sanitized again before the worker queue.
+
+The full-session summary is a local inference about counts, not a new saved
+investigation or root-cause claim. It distinguishes host observations, Codex
+reports, synthetic fixtures, inference, unverified human opinions and unknown or
+unavailable evidence. Contradictory final exit-code reports for the same producer
+stream, observed turn and item are flagged without choosing a winner. Item IDs
+reused after a reported turn start are separate; missing turn boundaries leave
+this interpretation uncertain. It does not detect every possible contradiction.
+Counts of process-generation records are not counts of unique processes, and
+ancestry/time proximity never establish command causation. Source/account
+authenticity and bidirectional cooperation remain unverified.
+
+The worker owns its SQLite snapshot; bounded queues keep SQL off the Tk thread.
+Closing the review signals cancellation and closes its private connection.
+The [acceptance harness](../scripts/check_qualification_review.py) checks an
+explicitly selected database and real withdrawn Tk widgets without launching
+Codex or writing findings. Its aggregate output does not contain event payloads.
+See [current validation](ENGINEERING_PROGRESS.md) and
+[distribution requirements](DISTRIBUTION.md).
+
 Protocol 1: one TCP connection, one request/response, 4-byte unsigned big-endian
 length followed by JSON. Bind is fixed to `127.0.0.1`. Request fields are exactly
 `version` (integer 1), `credential`, `operation`, `params`. Duplicate JSON keys,

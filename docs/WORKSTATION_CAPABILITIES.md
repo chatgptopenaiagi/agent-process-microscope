@@ -24,3 +24,22 @@ Keep local environments, temporary fixtures, capability files, session recording
 databases and reports out of version control. If Git ownership protection requires
 an exception, use only a command-local exception for the selected repository;
 never change the global ownership policy.
+
+The native review follow-up exercised the complete retained session (100 + 8 rows)
+and 21 saved citation links in real withdrawn Tk widgets. Database/WAL hashes
+remained unchanged. Visible inspection is still unavailable: the Computer Use
+skill requires a `node_repl` runtime not exposed in this tool session.
+
+Read-only packaging probes found PyInstaller 6.22.3, WiX 7.0.0 and setuptools
+84.0.0 outside the isolated application environment. The APM venv has no installed
+build frontend/backend or freezer. No tools were installed or upgraded and no
+distribution artifacts were built. See [packaging assessment](DISTRIBUTION.md).
+
+The Holmes checkpoint rechecked those tool versions without installing anything.
+Its native worker/widget workflow passed automated creation, citation lookup,
+challenge, review, correction, reopen, report and pagination checks. Visible human
+inspection remains unavailable because the required Computer Use `node_repl`
+runtime is not exposed. No screenshot or manual visual acceptance is claimed.
+The standard-library-only temporary-directory diagnostic again reproduced the
+restricted-token `0700` failure; inherited-directory operations passed. No ACL or
+global Python setting was changed. [Current results](ENGINEERING_PROGRESS.md).

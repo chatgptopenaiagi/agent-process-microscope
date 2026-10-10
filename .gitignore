@@ -10,6 +10,34 @@ build/
 .pytest_cache/
 *.log
 cache/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3-journal
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.jsonl
+recordings/
+screenshots/
+captures/
+*.bundle
+*.exe
+*.dll
+*.pyd
+*.whl
+*.msi
+*.msix
+*.zip
+*.7z
+*.dmp
+/.observer-test-*/
+/tests/tmp*/
 *.lnk
 
 # Machine-local Genesis evidence and historical execution notes.
@@ -17,6 +45,7 @@ cache/
 /CONTRACT.md
 /PROGRESS.md
 /TEST_REPORT.md
+/NEXT PROMT/
 
 # Credentials and private local configuration.
 .env

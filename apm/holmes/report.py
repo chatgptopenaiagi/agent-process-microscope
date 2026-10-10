@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from apm.core.events import utc_now
+from apm import __version__
 from .challenge import challenge, VERSION
 from .model import check, ref_key
 
@@ -35,7 +36,7 @@ def case_report(journal, catalog, case_id):
             citations[key] = item
     hashes = {key[0] for key in citations}
     return dict(format='apm-holmes-report', version=1, generated_at=utc_now(),
-        software=dict(component='APM Holmes', algorithm=VERSION, journal_schema=1),
+        software=dict(component='APM Holmes', algorithm=VERSION, journal_schema=1, application_version=__version__),
         case_id=case_id, title=entries[0]['title'], purpose=entries[0]['purpose'],
         integrity=integrity, evidence_inventory=[c.summary() for c in catalog.selected(hashes)],
         citations=list(citations.values()),
@@ -66,21 +67,38 @@ def render_html(report):
     def p(value):
         return '<p>' + escape(str(value)) + '</p>'
     def links(values):
-        return ' '.join('<a href="#' + anchors[ref_key(ref)] + '">' + escape(ref['evidence_id']) + '</a>' for ref in values)
+        return ' '.join('<a href="#' + anchors[ref_key(ref)] + '">Evidence ' + str(int(anchors[ref_key(ref)].split('-')[1]) + 1) + '</a>' for ref in values) or p('None attached; this is a gap, not proof of absence.')
+    def details(label, value):
+        return '<details><summary>' + escape(label) + '</summary><pre>' + escape(json.dumps(value, indent=2)) + '</pre></details>'
     parts = ['<!doctype html><html lang="en"><meta charset="utf-8">',
         '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; base-uri \'none\'; form-action \'none\'">',
-        '<title>APM investigation report</title><style>body{font:16px system-ui;max-width:1000px;margin:2em auto;padding:1em;line-height:1.5}article{border:1px solid #aaa;padding:1em;margin:1em 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}a{overflow-wrap:anywhere}</style><body>',
-        '<h1>' + escape(report['title']) + '</h1>', p(report['purpose']), p(report['conclusion']),
-        '<h2>Checks and limits</h2>', p(report['integrity']['check']), p('Journal tip: ' + report['integrity']['tip']),
-        *[p(v) for v in report['limitations']], p(report['timeline_summary']), '<h2>Evidence inventory</h2>']
-    for item in report['evidence_inventory']:
-        parts.append(p(f"Capsule {item['sha256']}; session {item['session_id']}; {item['records']} retained records. Structure and internal SHA-256 checked; provenance unverified."))
-    parts.append('<h2>Competing interpretations</h2>')
+        '<title>APM investigation report</title><style>body{font:17px system-ui;color:#172b42;background:#fff;max-width:1000px;margin:2em auto;padding:1em;line-height:1.6}h1{font-size:2.2em;line-height:1.2}h2{margin-top:1.8em}article{border:1px solid #b4c2d1;border-left:5px solid #476b91;border-radius:6px;padding:1em 1.4em;margin:1em 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85em}a{overflow-wrap:anywhere;color:#164e85;margin-right:1em}summary{cursor:pointer;font-weight:600;padding:.5em 0}:focus-visible{outline:3px solid #155f9a;outline-offset:3px}@media print{body{font-size:11pt}article{break-inside:avoid}}</style><body>',
+        '<h1>' + escape(report['title']) + '</h1>', p(report['purpose']),
+        '<article><h2>Investigation at a glance</h2>',
+        p(f"{len(report['hypotheses'])} explanations, {len(report['citations'])} cited records, {len(report['history'])} preserved revisions."),
+        p(report['conclusion']), '</article>',
+        '<h2>What happened?</h2>', p('The selected records and interpretations below reconstruct what was retained. Reported outcomes remain producer claims; they are not independent proof of the underlying action.'),
+        p(report['timeline_summary']),
+        '<h2>How do we know?</h2>', p(report['integrity']['check']),
+        details('Journal integrity details and recorded chain tip', report['integrity']),
+        *[p(v) for v in report['limitations']], '<h3>Evidence inventory</h3>']
+    for n, item in enumerate(report['evidence_inventory'], 1):
+        parts.append(p(f"Package {n}: {item['records']} retained records. Structure and internal SHA-256 checked; provenance unverified."))
+        parts.append(details(f'Package {n} identifiers and disclosure details', item))
+    parts += ['<h2>What remains unknown?</h2>', p('Producer identity, collection completeness and cross-source causal attribution are not established by these integrity checks.')]
+    for item in report['hypotheses']:
+        parts.append(p(item['hypothesis']['uncertainty']))
+        parts += [p('Missing evidence: ' + value['reason']) for value in item['hypothesis']['missing']]
+    parts.append('<h2>What does the evidence suggest?</h2>')
     for item in report['hypotheses']:
         value = item['hypothesis']
         parts += ['<article><h3>' + escape(value['claim']) + '</h3>', p('Recorded review state: ' + item['state']),
             p('Uncertainty: ' + value['uncertainty']), p('Supporting references:'), links(value['support']),
             p('Contrary references:'), links(value['contradict']), '<pre>' + escape(readable_challenge(item['challenge'])) + '</pre></article>']
+    parts.append('<h2>What should the human investigate next?</h2>')
+    checks = list(dict.fromkeys(check for item in report['hypotheses'] for check in item['hypothesis']['checks']))
+    parts += [p('Proposed, not executed: ' + check) for check in checks] or [p('No follow-up check has been proposed. Decide which missing observation would most help distinguish the explanations.')]
+    parts.append(p('A proposed check or saved human assessment grants no tool execution authority.'))
     parts.append('<h2>Complete interpretation history</h2>')
     for entry in report['history']:
         parts += ['<article>', p(f"{entry['created_at']} | {entry['hypothesis_id']} revision {entry['revision']} | {entry['kind']} | {entry['state']}"),
@@ -89,8 +107,17 @@ def render_html(report):
             '<details><summary>Structured revision</summary><pre>' + escape(json.dumps(entry, indent=2)) + '</pre></details></article>']
     parts.append('<h2>Cited evidence metadata</h2>')
     for item in report['citations']:
-        parts += ['<article id="' + anchors[ref_key(item['reference'])] + '"><pre>', escape(json.dumps(item, indent=2)), '</pre></article>']
-    parts += [p('Generated: ' + report['generated_at'] + ' | ' + VERSION), '</body></html>']
+        number = int(anchors[ref_key(item['reference'])].split('-')[1]) + 1
+        parts += ['<article id="' + anchors[ref_key(item['reference'])] + '"><h3>Evidence ' + str(number) + '</h3>',
+                  p('Citation status: ' + item['status'])]
+        if item['status'] == 'RESOLVED':
+            parts += [p(f"{item['source']} declares {item['category']} / {item['action']} [{item['declared_class']}]."),
+                      p('Reported exit code: ' + str(item['exit_code']) if item['exit_code'] is not None else 'Exit code: UNKNOWN'),
+                      p(f"Receipt position: {item['arrival']}. Timestamp basis: {item['timestamp_basis']}. This does not establish execution order.")]
+        else:
+            parts.append(p('The required evidence package is unavailable in this review. No record contents are inferred.'))
+        parts += [details('Full scoped reference and retained metadata', item), '</article>']
+    parts += [p('Generated: ' + report['generated_at'] + ' | APM ' + __version__ + ' | ' + VERSION), '</body></html>']
     return '\n'.join(parts)
 
 

@@ -66,7 +66,8 @@ class APMWindow:
         self._session_path = None
         self._last_metadata = {}
         self.workspace_var = tk.StringVar(root, str(workspace or Path.cwd()))
-        default_sessions = Path(__file__).resolve().parents[2] / "sessions"
+        from apm.paths import sessions_root as default_session_location
+        default_sessions = default_session_location()
         self.sessions_var = tk.StringVar(root, str(sessions_root or default_sessions))
         self.pid_var = tk.StringVar(root, "" if pid is None else str(pid))
         self.mode_var = tk.StringVar(root, "Synthetic demo" if demo else "Attach process")

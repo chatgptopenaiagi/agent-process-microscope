@@ -7,7 +7,11 @@ One owner-run protected Codex engineering slice is now verified against retained
 evidence. The broader observatory mission and bidirectional dialogue remain incomplete.
 
 These phases describe possible capabilities, not deadlines or commitments. Only
-Genesis 0.1 below and the linked development slice are implemented. Later work must preserve the [twelve principles](docs/PRINCIPLES.md).
+Genesis 0.1 below and the linked development slices are implemented. Holmes now
+has a guided native workflow and locally tested portable/wheel development builds;
+see [desktop qualification](docs/DESKTOP_CHECKPOINTS.md). The next gate is a clean
+ordinary-user Windows x64 portable qualification, followed by binary-license and
+installer lifecycle gates. Later work must preserve the [twelve principles](docs/PRINCIPLES.md).
 
 ## Genesis 0.1 — implemented experimental foundation
 

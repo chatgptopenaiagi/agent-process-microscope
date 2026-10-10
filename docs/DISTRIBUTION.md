@@ -1,5 +1,111 @@
 # Windows distribution assessment
 
+## Current desktop development qualification — 0.2.0.dev1
+
+Local Windows x64 portable executables and a developer wheel have now been built.
+They are **development artifacts, not published downloads or an installer**. The
+earlier assessments below remain historical records. No GitHub Release is created.
+
+Selected tool: PyInstaller 6.22.3, one-folder, with a GUI executable and a console
+executable sharing the same bundled application. Python 3.14.7 AMD64, Tcl/Tk 9,
+SQLite and psutil 7.2.2 supply the runtime. The app has no mandatory AI provider,
+Codex or Git dependency for offline investigation. See the [desktop guide](DESKTOP_GUIDE.md).
+
+### Reproduce locally
+
+Use a new directory for every build. `packaging/build-requirements.txt` pins nine
+build/runtime distributions; only psutil is an application dependency. With an
+authorized package source, install those pins into a project-local environment.
+When networking is unavailable, the reviewed offline alternative is:
+
+```powershell
+.venv/Scripts/python.exe scripts/prepare_build_env.py cache/build-env-NEW --tools-site <installed-tools-site-packages> --runtime-site .venv/Lib/site-packages
+cache/build-env-NEW/Scripts/python.exe scripts/build_windows.py --destination cache/build-NEW
+.venv/Scripts/python.exe scripts/check_windows_package.py --bundle cache/build-NEW/dist/APM --wheel cache/build-NEW/wheel/agent_process_microscope-0.2.0.dev1-py3-none-any.whl --destination reports/package-check-NEW
+cache/build-env-NEW/Scripts/python.exe scripts/check_wheel.py --wheel cache/build-NEW/wheel/agent_process_microscope-0.2.0.dev1-py3-none-any.whl --destination cache/wheel-check-NEW
+```
+
+The offline copy verifies installed RECORD hashes and records all copied files;
+it does not establish upstream authenticity. The environment does not inherit
+global site-packages. No global package installation or Codex change occurs.
+The source build allowlist contains application Python files, package metadata,
+license/readme files and the explicit packaging recipe. It excludes sessions,
+databases, reports, credentials, build caches and protected agent binaries.
+
+The unmodified wheel backend failed while creating its private temporary output
+directory under the restricted token. The explicit `--restricted-temp-compat`
+option on the build and wheel-check scripts uses inherited permissions **only for
+new temporary directories inside the selected isolated build/check directory and
+only in that process**. It changes no existing ACL or global setting. This was
+needed for the successful local build/install. Record use of this flag; it is not
+evidence of ordinary owner-shell success. Preserve original failed build output.
+
+The resulting `artifact-manifest.json` records every source and bundled file;
+`SHA256SUMS` hashes the portable ZIP and wheel. The ZIP contains the complete APM
+folder; keep it together and open `APM.exe`. `APM-cli.exe desktop-check <NEW-folder>`
+runs a bounded, explicitly synthetic qualification. Nothing executes on normal
+startup. Build scripts and pins support repeatability; byte-for-byte reproducibility
+across independent builders is **UNVERIFIED** (timestamps/toolchain provenance remain).
+
+### Actual acceptance scope
+
+Both AMD64 executables passed the withdrawn native Tk investigation workflow from
+an empty working directory with Python/Git removed from their process PATH. Their
+module paths resolve inside the bundle. Two capsules, two citations, challenge,
+review/correction, reopening, four revisions and HTML/JSON exports were checked.
+An independent parent process recomputed the journal chain. Evidence and program
+folder hashes remained unchanged. The wheel was installed by pip without a network
+into a fresh disposable venv and passed the same workflow from its installed path.
+These are current-host checks, not a clean-machine or visible-human qualification.
+
+| Gate | State and exact scope |
+|---|---|
+| BUILD VERIFIED | Local one-folder executables and wheel; source/content manifests and SHA-256; restricted-temp flag recorded |
+| INSTALL VERIFIED | Wheel pip installation in disposable venv only; normal owner execution pending; Windows installer UNVERIFIED |
+| LAUNCH VERIFIED | GUI-subsystem and console-subsystem executables run automated native widgets outside source tree; visible interaction UNVERIFIED |
+| UNINSTALL VERIFIED | UNVERIFIED; no installer created or installed |
+| DATA PRESERVATION VERIFIED | Source capsule/database hashes and journal history across desktop reopening; installer upgrade/uninstall UNVERIFIED |
+
+### Tool and redistribution review
+
+The [PyInstaller license exception](https://pyinstaller.org/en/stable/license.html)
+permits distribution of bundled applications under their own terms. The installed
+hook collection uses GPL-2.0-or-later for build hooks and Apache-2.0 for runtime
+hooks. Build pins include altgraph (MIT), packaging (Apache-2.0 OR BSD-2-Clause),
+pefile (MIT), pywin32-ctypes (BSD-3-Clause), setuptools and pip (MIT), and psutil
+(BSD-3-Clause). Copies of installed licenses, including vendored notices, are
+retained with the development bundle. Python's installed license and Tcl/Tk terms
+are included. SQLite declares its code [public domain](https://sqlite.org/copyright.html).
+
+The generated binary inventory also includes Python extension libraries, OpenSSL,
+libffi, Tcl dependencies, compression libraries and Microsoft runtime components.
+**A complete version-to-license/redistribution mapping for those transitive binaries
+is still a release gate.** The Python Windows license contains additional Microsoft
+redistribution requirements. Local build acceptance does not settle public binary
+redistribution, signing or publisher identity. No binaries are included in source
+publication candidates.
+
+Nuitka 4.2.2 is installed but was not selected: it introduces a C compilation
+toolchain and a second packaging route. Its current
+[license and generated-code terms](https://nuitka.net/doc/download.html) need their
+own review if adopted. [cx_Freeze](https://cx-freeze.readthedocs.io/en/latest/index.html)
+is an alternative with Python 3.14 support, but is not installed or tested here.
+
+WiX 7.0.0 is installed. Its [EULA/maintenance terms](https://docs.firegiant.com/wix/osmf/)
+require explicit acceptance and an applicability/payment determination. No EULA
+acceptance, sponsorship, global WiX setting or installer operation was performed.
+Installer work is **BLOCKED pending that owner decision**. The intended design is
+per-user application files and Start-menu shortcuts, no services or global PATH
+change, and no installer ownership of investigation data. Actual MSI creation,
+ordinary-user install/upgrade/rollback/uninstall and data retention remain UNVERIFIED.
+
+**Next task:** qualify this portable build in a clean ordinary-user Windows x64
+environment without Python, using the visible demonstration checklist and retained
+case hashes. Then close the transitive binary-license and installer decision gates
+before authoring and testing the per-user installer. Release publication is separate.
+
+## Historical source-only assessment
+
 Assessment date: 2026-10-10. This is a source engineering checkpoint, not a
 downloadable product. No executable bundle, installer, wheel or GitHub Release
 was built, installed, signed or published during this milestone. Android is a

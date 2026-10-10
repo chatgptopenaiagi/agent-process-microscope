@@ -52,5 +52,71 @@ widget checks do not establish visible owner acceptance. Synthetic assessments a
 not authenticated live model cooperation. Hashes are not signatures, timestamps are
 not causal proof, and human review never grants execution authority.
 
-Desktop refinement and artifact build/installation qualification are subsequent
-work. GitHub Releases and binary uploads require a separate owner decision.
+GitHub Releases and binary uploads require a separate owner decision.
+
+## Checkpoint A preservation outcome
+
+Local branch `feature/apm-cognitive-holmes-v1` contains integrated checkpoint commit
+`1f43147758c4ba88ac4af8b32ce42f49b25e3995`: 118 reviewed source files, 44 changes
+relative to PR #1. The complete-history bundle was verified. One integrated commit
+preserves the already-developed work without inventing its earlier chronology.
+
+Publication is **BLOCKED**. GitHub's create-tree tool returned exactly:
+`MCP tool call requires approval, but approval policy is never`.
+No new remote branch or PR exists. The policy was not bypassed. A local manifest,
+staged diff, source snapshot, verified bundle, PR body and PowerShell handoff are
+retained privately. Branch A must target `feature/living-observatory-v1`; branch B
+must target A while these dependencies remain unmerged. PR #1 remains open and
+unchanged at its recorded head. No main push, merge, release or setting change occurred.
+
+## Checkpoint B: human-oriented desktop and local packaging
+
+The default desktop now has a useful welcome page, explicitly synthetic onboarding,
+separate evidence/explanation/challenge-review/history/report pages, larger text,
+contextual guidance and keyboard navigation. Technical JSON remains available on
+its own page. Empty-state guidance replaces blank output areas. Review reasons
+start empty, so placeholder text cannot become a human assessment. Opening a case
+selects its latest saved explanation; source capsules are deliberately reselected.
+
+Reports lead with five human questions, readable evidence labels and explicit
+limits. Full references, integrity details and structured revisions are expandable;
+HTML remains escaped, offline and script-free. Capsule and journal schemas are
+unchanged. Installed data defaults are per-user, and explicit/source observation
+paths remain compatible. Closing waits for the active bounded operation, preserving
+committed work and keeping Tk lifetime on its owning thread.
+
+The first extended compatibility run exposed retained Tk callbacks and a later
+memory-widget timeout. Releasing completed callbacks eliminated the deallocation
+warnings; the next full run passed 134 tests in 89.355 seconds. A further close-during-
+operation regression test was added. All historical outputs remain retained.
+
+Read-only owner qualification again resolved 21 citations across 108 records in
+two pages. Database/WAL hashes and the protected executable matched retained
+evidence. No Codex operation was repeated. Native widget acceptance is automated;
+the approved visible desktop automation runtime is unavailable in this session,
+so human layout/usability acceptance remains pending.
+
+Both local portable executables and the wheel have passed independent current-host
+workflow checks. Build/inventory scripts and explicit limits are documented in
+[Distribution](DISTRIBUTION.md). These checks do not establish a clean install,
+complete binary license clearance, ordinary-owner standard tests or installer
+lifecycle acceptance. The owner-shell request stays **PENDING OWNER EXECUTION**.
+
+Final source verification: **135 compatibility tests passed in 88.315 seconds**,
+with no failures, errors, skips or Tk deallocation warnings. The unmodified
+standard command ran **135 tests in 79.271 seconds: 3 failures and 102 error
+entries**. Added GUI cases add inaccessible fixture/cleanup errors and failed
+postconditions when their temporary directories cannot be written. The original
+standard result remains retained. The standalone diagnostic, without importing
+APM, again reports a restricted token, denied child writes/scans for private
+temporary directories, and successful inherited-permission directories. No global
+security or Python configuration change was made.
+
+Final packaged checks passed for both GUI and console AMD64 subsystems, each with
+two citations and four preserved revisions. A separate process recomputed each
+journal chain. The developer wheel passed pip installation in a fresh disposable
+venv with the explicit restricted-temp accommodation. A compiled synthetic
+observation/inspect smoke check recovered five events without reader warnings.
+These small fixtures are functional checks, not throughput or general performance
+benchmarks. Exact hashes and private artifact locations are retained in the local
+handoff, not published as a release.

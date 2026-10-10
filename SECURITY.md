@@ -136,3 +136,19 @@ publication authorization. Pattern matching is explicit and source-class scoped;
 later adverse reviews suspend old patterns. Agreement between offline assessment
 messages is not proof. No paid provider, network connection, credential reader,
 remote execution, automatic investigation check or action-grant API is introduced.
+
+## Desktop and development packaging
+
+Welcome and normal startup perform no observation or provider connection. Only an
+explicit demonstration request creates synthetic evidence in a new directory.
+Case opening does not scan for missing source capsules. Completed worker callbacks
+are released on Tk's thread; closing waits for an active operation before destroying
+the window. Reports retain human-authored content and require review before sharing.
+
+Installed data defaults are separate from program files. Build/check tools accept
+new project-local destinations, pin copied distributions and use a source allowlist.
+No Codex executable, configuration, authentication or private evidence is bundled.
+The optional restricted-temp accommodation is process-local and scoped to new
+isolated build/check directories; it changes no existing or global ACL. Local
+RECORD/hash checks are not upstream artifact authentication. Transitive binary
+redistribution, signing and clean-machine lifecycle checks remain release gates.

@@ -279,6 +279,7 @@ class HolmesTests(unittest.TestCase):
             window.citation_choice.current(0); window.resolve_citation(); wait()
             self.assertIn('Resolved', window.summary.get('1.0','end'))
             window.challenge(); wait(); self.assertIn('INSUFFICIENT EVIDENCE', window.summary.get('1.0','end'))
+            window.reason.insert(0, 'Synthetic assessment for the GUI fixture; no unique cause established.')
             window.review_state.set('SUPPORTED_WITH_LIMITATIONS'); window.review(); wait()
             window.review_state.set('INSUFFICIENT_EVIDENCE'); window.review(True); wait()
             self.assertEqual(window.current['revision'], 4)

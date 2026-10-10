@@ -12,12 +12,15 @@ from apm.holmes.report import export_report, readable_challenge
 
 
 class HolmesWindow:
-    def __init__(self, root, *, producer_class='HUMAN_RECORDED'):
+    def __init__(self, root, *, producer_class='HUMAN_RECORDED', data_root=None):
+        from apm.paths import user_data_root
+        self.data_root = user_data_root(data_root)
         self.root, self.catalog = root, Catalog()
         self.producer_class = producer_class
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='APM-Holmes')
         self.future = None
-        self.closed, self.busy = False, False
+        self.callback = None
+        self.closed, self.busy, self.closing = False, False, False
         self.path = None
         self.case_id = str(uuid4())
         self.current = None
@@ -26,34 +29,82 @@ class HolmesWindow:
         self.history_after, self.history_stack = 0, []
         self.page_records = {}
         self.entries = {}
-        root.title('APM Holmes Lab — evidence and interpretations')
-        root.geometry('1180x880')
-        self.status = tk.StringVar(value='Create or open an investigation journal, then open selected evidence capsules.')
-        self.capsule_sha = tk.StringVar()
-        self.title = tk.StringVar(value='New investigation')
-        self.purpose = tk.StringVar(value='Understand the evidence and what remains unknown.')
-        self.producer = tk.StringVar(value='Local reviewer (declared identity)')
-        self.review_state = tk.StringVar(value='INSUFFICIENT_EVIDENCE')
-        bar = ttk.Frame(root, padding=8); bar.pack(fill='x')
-        for label, fn in [('New journal…', self.choose_new), ('Open journal…', self.choose_journal),
-                          ('Open capsule…', self.choose_capsule), ('New hypothesis', self.new_hypothesis),
-                          ('Export report…', self.choose_report), ('Backup…', self.choose_backup)]:
-            ttk.Button(bar, text=label, command=fn).pack(side='left', padx=3)
-        ttk.Label(root, text='Local interpretations only. Sources are read-only. Human assessments authorize no actions.', padding=6).pack(fill='x')
-        ttk.Label(root, textvariable=self.status, wraplength=1100, padding=6).pack(fill='x')
-        notebook = ttk.Notebook(root); notebook.pack(fill='both', expand=True, padx=8, pady=8)
+        self.microscopes = []
+        root.title('APM — Holmes Lab')
+        root.geometry('1160x850')
+        root.minsize(900, 680)
+        self.status = tk.StringVar(root, value='Start with a synthetic demonstration or open your own case.')
+        self.capsule_sha = tk.StringVar(root)
+        self.title = tk.StringVar(root, value='New investigation')
+        self.purpose = tk.StringVar(root, value='Understand the evidence and what remains unknown.')
+        self.producer = tk.StringVar(root, value='Local reviewer (declared identity)')
+        self.review_state = tk.StringVar(root, value='INSUFFICIENT_EVIDENCE')
+        root.option_add('*Font', ('Segoe UI', 11))
+        style = ttk.Style(root)
+        style.configure('Holmes.Title.TLabel', font=('Segoe UI', 22, 'bold'))
+        style.configure('Holmes.Heading.TLabel', font=('Segoe UI', 14, 'bold'))
+        style.configure('Holmes.Primary.TButton', font=('Segoe UI', 11, 'bold'), padding=(16, 9))
+        style.configure('Holmes.Treeview', rowheight=29, font=('Segoe UI', 11))
+        self.banner = tk.StringVar(root, value='Local investigation • No observation running • No external services connected')
+        bar = ttk.Frame(root, padding=(18, 12)); bar.pack(fill='x')
+        ttk.Label(bar, text='Holmes Lab', style='Holmes.Title.TLabel').pack(side='left')
+        ttk.Label(bar, textvariable=self.banner, wraplength=640).pack(side='right', padx=12)
+        menu = tk.Menu(root)
+        case_menu = tk.Menu(menu, tearoff=False)
+        for label, fn in [('New case…', self.choose_new), ('Open case…', self.choose_journal),
+                          ('Open evidence…', self.choose_capsule), ('Back up case…', self.choose_backup),
+                          ('Export report…', self.choose_report), ('Close safely', self.close)]:
+            case_menu.add_command(label=label, command=fn)
+        menu.add_cascade(label='Case', menu=case_menu)
+        tools_menu = tk.Menu(menu, tearoff=False)
+        tools_menu.add_command(label='Microscope: observation and replay', command=self.open_microscope)
+        tools_menu.add_command(label='Evidence library: capsules and comparison', command=self.open_library)
+        menu.add_cascade(label='Advanced tools', menu=tools_menu)
+        root.configure(menu=menu)
+        root.bind('<Control-o>', lambda e: self.choose_journal())
+        root.bind('<Control-n>', lambda e: self.choose_new())
+        ttk.Label(root, textvariable=self.status, wraplength=1080, padding=(18, 6)).pack(side='bottom', fill='x')
+        self.notebook = notebook = ttk.Notebook(root)
+        notebook.pack(fill='both', expand=True, padx=18, pady=10)
+        welcome = ttk.Frame(notebook, padding=22)
         evidence = ttk.Frame(notebook, padding=8)
         lab = ttk.Frame(notebook, padding=8)
+        review = ttk.Frame(notebook, padding=12)
         history = ttk.Frame(notebook, padding=8)
+        export = ttk.Frame(notebook, padding=22)
         advanced = ttk.Frame(notebook, padding=8)
-        for frame, label in [(lab, 'Holmes Lab'), (evidence, 'Select evidence'), (history, 'Revision history'), (advanced, 'Advanced JSON')]:
+        self.pages = dict(welcome=welcome, evidence=evidence, hypothesis=lab, review=review,
+                          history=history, export=export, advanced=advanced)
+        for frame, label in [(welcome, 'Start'), (evidence, '1  Evidence'), (lab, '2  Explanation'),
+                             (review, '3  Challenge & review'), (history, 'History'), (export, 'Report'), (advanced, 'Advanced JSON')]:
             notebook.add(frame, text=label)
+        self.heading(welcome, 'What happened — and how do we know?')
+        ttk.Label(welcome, text='Build an investigation from selected evidence. Compare explanations, inspect their limits,\n'
+                  'and preserve your assessment without changing the original observations.', wraplength=900).pack(anchor='w', pady=(8, 22))
+        actions = ttk.Frame(welcome); actions.pack(anchor='w')
+        self.demo_button = ttk.Button(actions, text='Try a synthetic demonstration', style='Holmes.Primary.TButton', command=self.start_demo)
+        self.demo_button.pack(side='left', padx=(0, 12))
+        ttk.Button(actions, text='Open an existing case…', command=self.choose_journal).pack(side='left')
+        ttk.Button(actions, text='Create a case…', command=self.choose_new).pack(side='left', padx=12)
+        self.heading(welcome, 'Your investigation, step by step', pady=(30, 8))
+        ttk.Label(welcome, text='1. Select evidence: open a capsule and mark supporting or contrary records.\n\n'
+                  '2. Build an explanation: state what it suggests and what remains unknown.\n\n'
+                  '3. Challenge and review: examine limits, then record or correct your assessment.\n\n'
+                  '4. Export a report: share selected findings and traceable citations.', wraplength=900).pack(anchor='w')
+        self.heading(welcome, 'You remain in control', pady=(25, 8))
+        ttk.Label(welcome, text='Opening this application starts no collection or external connection. Evidence is read-only.\n'
+                  'A human assessment is an interpretation, never permission to execute a command.\n'
+                  'The demonstration is generated locally and is clearly labeled SYNTHETIC.\n'
+                  'Close the window to finish; completed journal revisions remain saved.', wraplength=900).pack(anchor='w')
+        self.storage_label = ttk.Label(welcome, text=f'New case and demo location: {self.data_root}\nExisting cases stay where you selected them.', wraplength=900)
+        self.storage_label.pack(anchor='w', pady=(20, 0))
+        self.heading(lab, 'What does the evidence suggest?')
         form = ttk.Frame(lab); form.pack(fill='x')
         for row, (label, var) in enumerate([('Case title', self.title), ('Purpose', self.purpose), ('Declared reviewer', self.producer)]):
             ttk.Label(form, text=label).grid(row=row, column=0, sticky='w')
             ttk.Entry(form, textvariable=var).grid(row=row, column=1, sticky='ew', padx=6, pady=2)
         form.columnconfigure(1, weight=1)
-        self.hypotheses = ttk.Treeview(lab, columns=('claim', 'state', 'revision'), show='headings', height=4)
+        self.hypotheses = ttk.Treeview(lab, columns=('claim', 'state', 'revision'), show='headings', height=3, style='Holmes.Treeview')
         for col, width in [('claim', 650), ('state', 240), ('revision', 70)]:
             self.hypotheses.heading(col, text=col.title()); self.hypotheses.column(col, width=width)
         self.hypotheses.pack(fill='x', pady=6)
@@ -64,27 +115,41 @@ class HolmesWindow:
         self.alternatives = self._field(fields, 'Alternative explanations (one per line)', 2)
         self.missing = self._field(fields, 'Missing evidence (one per line)', 3)
         self.checks = self._field(fields, 'Proposed checks — never executed (one per line)', 4)
-        self.reference_status = tk.StringVar(value='Supporting: 0 | Contradicting: 0')
-        ttk.Label(lab, textvariable=self.reference_status).pack(anchor='w')
-        citebar = ttk.Frame(lab); citebar.pack(fill='x')
+        self.reference_status = tk.StringVar(root, value='Supporting: 0 | Contradicting: 0')
+        ttk.Label(lab, textvariable=self.reference_status).pack(anchor='w', pady=4)
+        actions = ttk.Frame(lab); actions.pack(fill='x', pady=8)
+        self.create_button = ttk.Button(actions, text='Save new explanation', command=self.propose, style='Holmes.Primary.TButton')
+        self.create_button.pack(side='left')
+        for label, fn in [('Revise selected', self.revise), ('New draft', self.new_hypothesis),
+                          ('Clear draft references', self.clear_references), ('Next: challenge & review', lambda: self.navigate('review'))]:
+            ttk.Button(actions, text=label, command=fn).pack(side='left', padx=5)
+        self.heading(review, 'How strong is this explanation?')
+        ttk.Label(review, text='Select a saved explanation on the previous page. A deterministic challenge checks citations and evidence gaps.\n'
+                  'It cannot establish a unique cause or verify who produced the evidence.', wraplength=1000).pack(anchor='w', pady=8)
+        challenge_bar = ttk.Frame(review); challenge_bar.pack(fill='x', pady=8)
+        ttk.Button(challenge_bar, text='Challenge selected explanation', command=self.challenge, style='Holmes.Primary.TButton').pack(side='left')
+        ttk.Button(challenge_bar, text='Find reviewed patterns', command=self.find_patterns).pack(side='left', padx=12)
+        citebar = ttk.Frame(review); citebar.pack(fill='x', pady=8)
         self.citation_choice = ttk.Combobox(citebar, state='readonly', width=75)
         self.citation_choice.pack(side='left', fill='x', expand=True)
-        ttk.Button(citebar, text='Resolve saved citation', command=self.resolve_citation).pack(side='left')
-        actions = ttk.Frame(lab); actions.pack(fill='x', pady=5)
-        for label, fn in [('Create hypothesis', self.propose), ('Save revised hypothesis', self.revise),
-                          ('Challenge evidence', self.challenge), ('Find reviewed patterns', self.find_patterns),
-                          ('Clear draft references', self.clear_references)]:
-            ttk.Button(actions, text=label, command=fn).pack(side='left', padx=3)
-        review = ttk.Frame(lab); review.pack(fill='x')
-        ttk.Combobox(review, textvariable=self.review_state, values=STATES, state='readonly', width=29).pack(side='left')
-        self.reason = ttk.Entry(review); self.reason.pack(side='left', fill='x', expand=True, padx=4)
-        self.reason.insert(0, 'Explain the assessment or correction here.')
-        ttk.Button(review, text='Record assessment', command=lambda: self.review(False)).pack(side='left')
-        ttk.Button(review, text='Correct assessment', command=lambda: self.review(True)).pack(side='left', padx=3)
-        self.summary = tk.Text(lab, height=10, wrap='word'); self.summary.pack(fill='both', expand=True, pady=6)
-        self.capsules = ttk.Combobox(evidence, textvariable=self.capsule_sha, state='readonly', width=90)
-        self.capsules.pack(fill='x'); self.capsules.bind('<<ComboboxSelected>>', lambda e: self.load_page(reset=True))
-        self.evidence = ttk.Treeview(evidence, columns=('arrival', 'source', 'class', 'event', 'outcome'), show='headings', height=12)
+        ttk.Button(citebar, text='Inspect saved citation', command=self.resolve_citation).pack(side='left')
+        self.summary = tk.Text(review, height=9, wrap='word'); self.summary.pack(fill='both', expand=True, pady=6)
+        ttk.Label(review, text='Human assessment — choose a state and explain your reasoning.').pack(anchor='w', pady=(12, 4))
+        review_row = ttk.Frame(review); review_row.pack(fill='x')
+        ttk.Combobox(review_row, textvariable=self.review_state, values=STATES, state='readonly', width=30).pack(side='left')
+        self.reason = ttk.Entry(review_row); self.reason.pack(side='left', fill='x', expand=True, padx=8)
+        review_actions = ttk.Frame(review); review_actions.pack(fill='x', pady=10)
+        ttk.Button(review_actions, text='Record assessment', command=lambda: self.review(False)).pack(side='left')
+        ttk.Button(review_actions, text='Correct earlier assessment', command=lambda: self.review(True)).pack(side='left', padx=10)
+        ttk.Label(review, text='Corrections add a revision. Earlier assessments remain inspectable. No action is authorized.').pack(anchor='w')
+        self.heading(evidence, 'What happened? Select the records that matter.')
+        ttk.Label(evidence, text='Capsules are read-only evidence packages. Classification is a source declaration; receipt order is not causal order.').pack(anchor='w', pady=8)
+        evidence_bar = ttk.Frame(evidence); evidence_bar.pack(fill='x')
+        ttk.Button(evidence_bar, text='Open evidence capsule…', command=self.choose_capsule).pack(side='left', padx=(0, 8))
+        self.capsules = ttk.Combobox(evidence_bar, state='readonly', width=65)
+        self.capsules.pack(fill='x', expand=True)
+        self.capsules.bind('<<ComboboxSelected>>', self.select_capsule)
+        self.evidence = ttk.Treeview(evidence, columns=('arrival', 'source', 'class', 'event', 'outcome'), show='headings', height=9, style='Holmes.Treeview')
         for col in ('arrival', 'source', 'class', 'event', 'outcome'):
             self.evidence.heading(col, text=col.title())
         self.evidence.pack(fill='both', expand=True, pady=6)
@@ -93,8 +158,11 @@ class HolmesWindow:
         for label, fn in [('Previous 100', self.previous_page), ('Next 100', self.next_page),
                           ('Use as support', lambda: self.attach('support')), ('Use as contradiction', lambda: self.attach('contradict'))]:
             ttk.Button(buttons, text=label, command=fn).pack(side='left', padx=4)
-        self.evidence_summary = tk.Text(evidence, height=10, wrap='word'); self.evidence_summary.pack(fill='both', expand=True, pady=8)
-        self.history = ttk.Treeview(history, columns=('revision', 'kind', 'state', 'producer'), show='headings')
+        ttk.Button(buttons, text='Next: build explanation', command=lambda: self.navigate('hypothesis')).pack(side='right')
+        ttk.Label(evidence, textvariable=self.reference_status).pack(anchor='w', pady=6)
+        self.evidence_summary = tk.Text(evidence, height=7, wrap='word'); self.evidence_summary.pack(fill='both', expand=True, pady=8)
+        self.heading(history, 'What changed in our understanding?')
+        self.history = ttk.Treeview(history, columns=('revision', 'kind', 'state', 'producer'), show='headings', style='Holmes.Treeview')
         for col in ('revision', 'kind', 'state', 'producer'):
             self.history.heading(col, text=col.title())
         self.history.pack(fill='both', expand=True)
@@ -103,9 +171,92 @@ class HolmesWindow:
         ttk.Button(nav, text='Previous 100 revisions', command=self.previous_history).pack(side='left')
         ttk.Button(nav, text='Next 100 revisions', command=self.next_history).pack(side='left')
         self.history_summary = tk.Text(history, height=10, wrap='word'); self.history_summary.pack(fill='both', expand=True)
+        self.heading(export, 'Share findings with their limits')
+        ttk.Label(export, text='Export the selected case as a self-contained HTML report or structured JSON.\n'
+                  'The report includes interpretations, assessment history and only cited evidence metadata.\n'
+                  'It does not embed entire sessions or confer forensic certification.\n\n'
+                  'Your written interpretations may contain sensitive information: review the report before sharing.\n'
+                  'Choose a new destination; existing reports are never overwritten.', wraplength=950).pack(anchor='w', pady=20)
+        ttk.Button(export, text='Export investigation report…', command=self.choose_report, style='Holmes.Primary.TButton').pack(anchor='w')
+        ttk.Button(export, text='Create a verified journal backup…', command=self.choose_backup).pack(anchor='w', pady=18)
         self.raw = tk.Text(advanced, wrap='word'); self.raw.pack(fill='both', expand=True)
+        for widget in (self.claim, self.uncertainty, self.alternatives, self.missing, self.checks,
+                       self.summary, self.evidence_summary, self.history_summary, self.raw):
+            widget.bind('<Tab>', lambda e: self.focus_next(e.widget))
+            widget.bind('<Shift-Tab>', lambda e: self.focus_next(e.widget, backwards=True))
+        self.put(self.summary, 'Save an explanation, then run a challenge. Findings and limitations will appear here.')
+        self.put(self.evidence_summary, 'Open a capsule or try the synthetic demonstration on Start. Select a record to read its summary.')
+        self.put(self.history_summary, 'Every saved interpretation and correction remains in the history. Select a revision to inspect it.')
+        self.put(self.raw, 'Advanced structured data appears here after you select evidence or an interpretation.')
         root.protocol('WM_DELETE_WINDOW', self.close)
         self.timer = root.after(30, self.poll)
+
+    @staticmethod
+    def heading(parent, value, pady=(0, 8)):
+        ttk.Label(parent, text=value, style='Holmes.Heading.TLabel').pack(anchor='w', pady=pady)
+
+    @staticmethod
+    def focus_next(widget, backwards=False):
+        (widget.tk_focusPrev() if backwards else widget.tk_focusNext()).focus_set()
+        return 'break'
+
+    def navigate(self, page):
+        self.notebook.select(self.pages[page])
+
+    def open_microscope(self):
+        # Independent Tk root isolates the legacy microscope's global theme settings.
+        from apm.ui.main_window import APMWindow
+        child = tk.Tk()
+        child.apm = APMWindow(child, sessions_root=self.data_root / 'sessions')
+        self.microscopes.append(child.apm)
+        self.banner.set('Advanced microscope opened • Observation controls are in that window • No model providers')
+
+    def open_library(self):
+        if self.busy: return
+        from apm.evidence.capsule import Capsule
+        from apm.ui.capsule_window import CapsuleWindow
+        path = filedialog.askopenfilename(parent=self.root, title='Open read-only evidence library', filetypes=[('Evidence capsule', '*.apmcapsule')])
+        if not path: return
+        def done(capsule):
+            child = tk.Toplevel(self.root)
+            child.apm = CapsuleWindow(child, capsule)
+        self.submit(lambda: Capsule.open(path), done)
+
+    def select_capsule(self, event=None):
+        index = self.capsules.current()
+        if index >= 0:
+            self.capsule_sha.set(self.catalog.summaries()[index]['sha256'])
+            self.load_page(reset=True)
+
+    def refresh_capsules(self, sha):
+        summaries = self.catalog.summaries()
+        self.capsules.configure(values=[f"Evidence package {n + 1} — {s['records']} records" for n, s in enumerate(summaries)])
+        self.capsules.current(next(n for n, s in enumerate(summaries) if s['sha256'] == sha))
+        self.capsule_sha.set(sha)
+
+    def start_demo(self):
+        if self.busy: return
+        if self.path is not None:
+            self.status.set('Open another APM window for a new demonstration; your current case stays selected.'); return
+        from apm.desktop_demo import create_demo
+        destination = self.data_root / 'demonstrations' / str(uuid4())
+        def work():
+            result = create_demo(destination)
+            catalog = Catalog()
+            shas = [catalog.open(path) for path in result['capsules']]
+            return result, catalog, shas
+        def done(value):
+            result, self.catalog, shas = value
+            self.path, self.case_id = result['journal'], result['case_id']
+            self.title.set('SYNTHETIC demonstration: conflicting test outcomes')
+            self.purpose.set('Practice investigation; these records describe no real agent or command.')
+            self.banner.set('SYNTHETIC DEMONSTRATION • No real observation • No external services')
+            self.new_hypothesis()
+            self.refresh([])
+            self.refresh_capsules(shas[0])
+            self.load_page(reset=True)
+            self.navigate('evidence')
+        self.submit(work, done)
 
     @staticmethod
     def _field(parent, label, row):
@@ -119,7 +270,7 @@ class HolmesWindow:
         widget.configure(state='normal'); widget.delete('1.0', 'end'); widget.insert('1.0', value); widget.configure(state='disabled')
 
     def submit(self, operation, callback):
-        if self.busy or self.closed:
+        if self.busy or self.closed or self.closing:
             self.status.set('Please wait for the current bounded operation to finish.'); return
         self.busy = True; self.status.set('Working locally…')
         self.callback = callback
@@ -130,22 +281,34 @@ class HolmesWindow:
             return
         if self.future is not None and self.future.done():
             future, self.future = self.future, None
+            callback, self.callback = self.callback, None
             self.busy = False
             try:
                 result = future.result()
                 self.status.set('Ready. Source evidence unchanged; no execution authority.')
-                self.callback(result)
-            except Exception:
+                if not self.closing: callback(result)
+            except Exception as exc:
                 # Do not display exception text potentially containing a private path or input.
-                self.status.set('Operation rejected or unavailable. Check citations, field limits, review selection and destination. Sources unchanged.')
+                if isinstance(exc, FileExistsError):
+                    self.status.set('Choose a new destination. The existing file was preserved.')
+                elif isinstance(exc, PermissionError):
+                    self.status.set('This location is not accessible. Choose a folder you can write to; existing evidence was preserved.')
+                else:
+                    self.status.set('Operation rejected or unavailable. Check citations, field limits, review selection and destination. Sources unchanged.')
         self.timer = self.root.after(30, self.poll)
 
     def choose_new(self):
-        path = filedialog.asksaveasfilename(parent=self.root, title='Create a NEW investigation journal', defaultextension='.sqlite3')
+        if self.busy: return
+        directory = self.data_root / 'cases'
+        try: directory.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            self.status.set('The default case location is unavailable. Use Open case to select an existing accessible case.'); return
+        path = filedialog.asksaveasfilename(parent=self.root, title='Create a new APM case',
+            initialdir=directory, initialfile='investigation.sqlite3', defaultextension='.sqlite3', filetypes=[('APM case', '*.sqlite3')])
         if path: self.open_journal(path, create=True)
 
     def choose_journal(self):
-        path = filedialog.askopenfilename(parent=self.root, title='Open Holmes journal', filetypes=[('Holmes journal', '*.sqlite3')])
+        path = filedialog.askopenfilename(parent=self.root, title='Open an APM investigation case', filetypes=[('APM case', '*.sqlite3')])
         if path: self.open_journal(path)
 
     def open_journal(self, path, create=False):
@@ -154,9 +317,17 @@ class HolmesWindow:
             with (Journal.create(path) if create else Journal(path)) as journal:
                 return journal.all_entries(), journal.verify()
         def done(result):
-            self.path = path; self.current = None
+            self.path = path; self.new_hypothesis(); self.case_id = str(uuid4())
             self.refresh(result[0])
-            self.status.set(f"Journal checks passed: {result[1]['entries']} revisions; tip {result[1]['tip']}. Unkeyed, identity unverified.")
+            if result[0]:
+                self.hypotheses.selection_set(result[0][-1]['hypothesis_id']); self.select_hypothesis()
+            else:
+                self.title.set('New investigation')
+                self.purpose.set('Understand the evidence and what remains unknown.')
+            self.banner.set('Local case • Source identity unverified • Reviews authorize no actions')
+            self.status.set(f"Case opened: {result[1]['entries']} saved revisions. Journal integrity checks passed; details on Advanced JSON.")
+            self.put(self.raw, json.dumps(dict(journal_integrity=result[1]), indent=2))
+            self.navigate('hypothesis' if result[0] else 'evidence')
         self.submit(work, done)
 
     def choose_capsule(self):
@@ -165,8 +336,7 @@ class HolmesWindow:
 
     def open_capsule(self, path):
         def done(sha):
-            self.capsules.configure(values=[s['sha256'] for s in self.catalog.summaries()])
-            self.capsule_sha.set(sha); self.load_page(reset=True)
+            self.refresh_capsules(sha); self.load_page(reset=True); self.navigate('evidence')
         self.submit(lambda: self.catalog.open(path), done)
 
     def load_page(self, reset=False):
@@ -179,7 +349,8 @@ class HolmesWindow:
             for r in page:
                 self.evidence.insert('', 'end', iid=r['event_id'], values=(r['arrival'], r['source'],
                     r['evidence_class'] + ' (declared)', r['category'] + ' ' + r['action'], r['attributes'].get('exit_code', 'UNKNOWN')))
-            self.status.set(f"{len(page)} records on this page. Internal capsule hashes checked; exporter provenance unverified.")
+            total = next(s['records'] for s in self.catalog.summaries() if s['sha256'] == sha)
+            self.status.set(f"Page {len(self.page_stack) + 1}: {len(page)} records shown, {total} in this package. Internal hashes checked; source identity unverified.")
         self.submit(lambda: self.catalog.page(sha, after), done)
 
     def next_page(self):
@@ -205,6 +376,7 @@ class HolmesWindow:
         target = getattr(self, role)
         if ref not in target and len(target) < 40: target.append(ref)
         self.reference_status.set(f'Supporting: {len(self.support)} | Contradicting: {len(self.contradict)}')
+        self.status.set('Added to the draft explanation. Save the explanation to preserve these references.')
 
     def clear_references(self):
         self.support, self.contradict = [], []
@@ -238,7 +410,7 @@ class HolmesWindow:
         self.hypotheses.selection_remove(*self.hypotheses.selection())
         for widget in (self.claim, self.uncertainty, self.alternatives, self.missing, self.checks):
             widget.delete('1.0', 'end')
-        self.put(self.summary, 'Write an explanation, its uncertainty and alternatives. Select evidence on the next tab, then create the hypothesis.')
+        self.put(self.summary, 'Write an explanation, its uncertainty and alternatives. Select evidence on Evidence, then save the explanation.')
 
     def draft(self):
         def lines(widget):
@@ -312,8 +484,8 @@ class HolmesWindow:
         e = self.latest[selected[0]]; self.current = e; self.case_id = e['case_id']
         self.title.set(e['title']); self.purpose.set(e['purpose'])
         h = e['hypothesis']; self.support, self.contradict = list(h['support']), list(h['contradict'])
-        self.citation_choice.configure(values=[role + ': ' + r['evidence_id'] + ' / ' + r['capsule_sha256'][:12]
-                                              for role in ('support', 'contradict') for r in h[role]])
+        self.citation_choice.configure(values=[f"{role.title()} — evidence {n + 1}"
+                                              for role in ('support', 'contradict') for n, r in enumerate(h[role])])
         self.citation_choice.set('')
         for widget, value in [(self.claim, h['claim']), (self.uncertainty, h['uncertainty']),
             (self.alternatives, '\n'.join(h['alternatives'])), (self.missing, '\n'.join(v['reason'] for v in h['missing'])),
@@ -364,7 +536,26 @@ class HolmesWindow:
         self.submit(work, lambda result: self.status.set(f"Backup verified: {result['entries']} entries. Source evidence is separate."))
 
     def close(self):
+        if self.closed: return
+        self.closing = True
+        if self.future is not None and not self.future.done():
+            self.status.set('Finishing the current local operation before closing. Source evidence remains unchanged.')
+            self.root.after(50, self.close)
+            return
         self.closed = True
+        self.callback = None
+        for microscope in self.microscopes:
+            try:
+                if microscope.root.winfo_exists(): microscope.close()
+            except tk.TclError:
+                pass
         self.root.after_cancel(self.timer)
-        self.executor.shutdown(wait=False, cancel_futures=True)
+        self.executor.shutdown(wait=True, cancel_futures=True)
         self.root.destroy()
+
+
+def run_desktop(data_root=None):
+    root = tk.Tk()
+    HolmesWindow(root, data_root=data_root)
+    root.mainloop()
+    return 0

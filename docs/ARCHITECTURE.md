@@ -1,5 +1,11 @@
 # Architecture
 
+This page describes the preserved Genesis flow. The [Observatory extension](OBSERVATORY.md)
+adds a SQL subscriber after JSONL recording, independent optional receiver/companion
+processes, and a native memory/investigation window. SQL and JSONL are not one atomic
+transaction; a SQL failure is surfaced and stops observation without killing the
+specimen. Existing recording/replay formats remain unchanged.
+
 Agent Process Microscope (APM) Genesis is a local Python application with a native Tkinter/ttk interface. It collects scoped external evidence, normalizes and redacts that evidence, records it, and presents labelled interpretations. It does not inspect private model reasoning.
 
 The implementation is deliberately small: one collection worker, bounded queues, a local recorder, a deterministic state engine, and a Tk event loop. There is no web server, remote telemetry service, or model call in this architecture.

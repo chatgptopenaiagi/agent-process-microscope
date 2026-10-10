@@ -21,9 +21,26 @@ editing the issue alone does not make the credential safe again.
 ## Collection and trust boundaries
 
 APM is visible, local and scoped to a selected process tree and workspace. It has
-no startup registration, service, network listener, upload, keylogging, injection,
+no startup registration, installed service, upload, keylogging, injection,
 credential access, browser control, private Codex-history reader or model API call.
 Closing/stopping attach observation never kills the observed agent.
+
+The optional `serve` command explicitly opens a bounded `127.0.0.1` TCP receiver.
+It requires separate session-scoped reader/reporter capabilities. It has no SQL,
+shell or process-control operation. Normal GUI startup opens no listener.
+Capability files and SQLite memory inherit filesystem permissions and are
+plaintext; this is not isolation from processes able to read those files. Tokens
+authorize an API scope, not the truth or OS identity of a producer. New observations
+also write SQLite memory; local decisions are opinions, never execution grants.
+See [protocol, bounds and trust limitations](docs/OBSERVATORY.md).
+
+The separately invoked `scripts/qualify_codex.py` development harness launches an
+explicitly owner-authorized disposable workload through a pinned Codex executable.
+The CLI may contact its configured provider. The harness does not inspect credentials,
+edit global configuration or expose execution through APM's receiver/GUI. It keeps
+only allowlisted action reports and fixed startup diagnostic labels, stopping host
+observation before cleaning up its own process generations. Its raw artifacts are
+private local evidence; publish reviewed aggregate summaries only.
 
 Collection minimizes data before central redaction: file contents, root agent
 arguments, environment variables, unrestricted command outputs and private model

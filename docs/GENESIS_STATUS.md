@@ -1,5 +1,9 @@
 # Genesis status
 
+Historical publication baseline. Current development adds the independently
+validated [Observatory slice](OBSERVATORY.md); its new results and limits are in
+[engineering progress](ENGINEERING_PROGRESS.md).
+
 Genesis is a working local observation foundation, version `0.1.0`. The implemented runtime was validated on Windows with 66 passing tests, a native synthetic-demo/passive-replay check, and a small owned process/workspace fixture. Publication documents that baseline; it does not silently add unimplemented adapters or rerun another agent's work.
 
 ## Implemented

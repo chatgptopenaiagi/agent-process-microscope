@@ -1,8 +1,19 @@
 # Codex observation boundary
 
-APM imports an explicitly selected export from `codex exec --json`. It does not
+The finite import below remains available. The [Observatory extension](OBSERVATORY.md)
+also accepts an explicitly piped public exec JSONL stream through `feed-codex`, using
+the same action allowlist before a durable sanitized outbox. This does not attach
+to an arbitrary existing Codex or ChatGPT conversation. On 10 October 2026 the
+owner-selected protected `0.156.0-alpha.17` binary's version and exec help were
+verified without changing its installation or global configuration. The older
+version observation below is historical, not a recommendation to substitute it.
+
+The passive importer reads an explicitly selected export from `codex exec --json`. It does not
 start Codex, call a model, inspect authentication, or read private rollout/history
-files. Attaching APM to a PID observes operating-system evidence only; that does
+files. The separately invoked, owner-authorized qualification harness launches only
+the pinned protected CLI in a disposable fixture; see the
+[qualified workload and its limits](ENGINEERING_PROGRESS.md). Attaching APM to a PID
+observes operating-system evidence only; that does
 not supply a Codex event stream or reveal reasoning.
 
 For an export the owner deliberately captured, run:
@@ -31,7 +42,7 @@ thread/turn operations, and notifications. Its slash-separated event names and
 camelCase item schema are not this import format. The documented schema-generation
 commands describe that protocol, not the exec JSONL schema. These sources did not
 establish a general read-only attachment to an arbitrary existing CLI process.
-APM does not open a server, expose a listener, send approvals, or resume a thread.
+The Genesis importer does not open a server, expose a listener, send approvals, or resume a thread.
 [Official app-server documentation](https://learn.chatgpt.com/docs/app-server).
 
 Research on 2026-09-27 also inspected the locally installed public npm package

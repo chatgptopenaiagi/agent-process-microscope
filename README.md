@@ -7,6 +7,17 @@ system for evidence-backed, human-readable inspection and replay of AI-agent act
 
 **Status: Experimental Genesis Implementation — 0.1.0**
 
+**Observatory development extension:** new observations also enter local SQLite
+memory. **Memory / Ask…** opens searchable session history, a live arrival view,
+evidence-cited local investigations and human notes. Optional independent receiver
+and companion commands provide authenticated, session-scoped cooperation without
+a cloud account or new dependencies. See the [working slice and commands](docs/OBSERVATORY.md)
+and [measured validation / remaining gaps](docs/ENGINEERING_PROGRESS.md).
+An owner-run protected Codex workload has been checked against retained local
+evidence: 5 public reports, a completed failing command and turn, and 108 verified
+SQL records. This qualifies one engineering slice; account identity, command-to-PID
+causation and bidirectional human-AI dialogue are not established.
+
 Genesis is a working native desktop prototype with a recorded **66-test passing
 baseline**. Broader agent correlation, application instrumentation and cross-environment
 observation remain future work. [Validation and its limits](docs/VALIDATION.md).
@@ -46,6 +57,8 @@ Codex rollout histories or make model API calls.
 | Recording/replay | JSONL sessions, basic recovery and passive chronological replay | Replay presents events; it never executes their commands. |
 | Codex adapter | Allowlisted, finite JSONL import of official CLI action reports | Imported reports are not independent OS proof. |
 | Demo/security | Explicitly synthetic demonstration and pre-persistence redaction | Pattern-based redaction is best effort. |
+| Operational memory | SQLite WAL, receipt/stream ordering, integrity checks, backup, local Ask and notes | Source reports are not OS proof; decisions never authorize execution. |
+| Optional bridge | Authenticated loopback receiver, durable companion outbox, read-only scoped queries | Explicit CLI startup; no ChatGPT conversation injection or provider call. |
 
 **Stop observation does not terminate the attached process.** Pause Display leaves
 collection running. Clear View changes the display without deleting recordings.

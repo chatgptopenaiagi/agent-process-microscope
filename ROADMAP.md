@@ -1,7 +1,13 @@
 # Capability roadmap
 
+The [Observatory development slice](docs/OBSERVATORY.md) now implements local SQL
+memory, optional independent receiver/companion processes, scoped investigation
+queries and native Memory / Ask. See [current measured evidence and next step](docs/ENGINEERING_PROGRESS.md).
+One owner-run protected Codex engineering slice is now verified against retained
+evidence. The broader observatory mission and bidirectional dialogue remain incomplete.
+
 These phases describe possible capabilities, not deadlines or commitments. Only
-Genesis 0.1 below is implemented. Later work must preserve the [twelve principles](docs/PRINCIPLES.md).
+Genesis 0.1 below and the linked development slice are implemented. Later work must preserve the [twelve principles](docs/PRINCIPLES.md).
 
 ## Genesis 0.1 — implemented experimental foundation
 

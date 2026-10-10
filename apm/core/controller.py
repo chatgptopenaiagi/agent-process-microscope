@@ -18,7 +18,7 @@ from apm.storage.recorder import Recorder
 
 class Controller:
     """One collection worker, bounded queues, flush/checkpoint and explicit scope."""
-    def __init__(self, workspace, sessions_root, pid=None, demo=False):
+    def __init__(self, workspace, sessions_root, pid=None, demo=False, *, memory_path=None, session_id=None):
         self.workspace = Path(os.path.abspath(workspace))
         self.sessions_root = Path(sessions_root).resolve()
         if not self.workspace.is_dir():
@@ -26,7 +26,8 @@ class Controller:
         if not demo and (pid is None or int(pid) <= 0):
             raise ValueError('Attach mode requires a positive root process PID')
         self.pid, self.demo = pid, demo
-        session_id = str(uuid4())
+        session_id = session_id or str(uuid4())
+        self.memory_path = Path(memory_path) if memory_path else self.sessions_root / 'observatory.sqlite3'
         self.session_path = self.sessions_root / (utc_now().replace(':', '').replace('.', '') + '_' + session_id)
         self.session_info = dict(schema_version='1.0', session_id=session_id,
                                  agent='synthetic-demo' if demo else f'process-{pid}',
@@ -105,11 +106,20 @@ class Controller:
 
     def _run(self):
         recorder = None
+        memory = None
         adapters = []
         try:
             self.session_info.update(started_at=utc_now(), status='recording')
             recorder = Recorder(self.session_path, self.session_info)
             self.bus.subscribe(recorder.record)
+            from apm.storage.memory import Memory
+            memory = Memory(self.memory_path)
+            memory_stream, memory_seq = str(uuid4()), 0
+            def remember(event):
+                nonlocal memory_seq
+                memory_seq += 1
+                memory.append(event.to_dict(), memory_stream, memory_seq, origin='host')
+            self.bus.subscribe(remember)
             def state_consumer(event):
                 derived = self.engine.accept(event)
                 if derived:
@@ -174,6 +184,8 @@ class Controller:
             self.error = redact_text(f'{type(exc).__name__}: {exc}')
             self.status = 'error'
         finally:
+            if memory:
+                memory.close()
             for adapter, _ in adapters:
                 try:
                     adapter.close()

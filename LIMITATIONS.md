@@ -1,5 +1,13 @@
 # Genesis limits
 
+The [Observatory extension](docs/OBSERVATORY.md) adds local SQL memory, an optional
+authenticated receiver and deterministic investigations. One owner-run Codex
+engineering workload is qualified against retained local evidence; account identity
+is not independently verified. Cloud dialogue, MCP, causal graph, 3D, Windows 11
+qualification and installer delivery remain incomplete. The SQL hash chain detects
+certain modifications; it does not authenticate sources or prove completeness.
+New SQL recording is additional to the Genesis JSONL format described below.
+
 - Windows is the exercised target. Cross-platform abstractions do not constitute
   verified WSL/Linux/remote support.
 - Attach, demo and passive replay/import work. Managed agent launch is deferred.
@@ -20,6 +28,6 @@
 - No standalone frozen EXE or signed installer is delivered in Genesis. The
   windowed Python launcher uses the project virtual environment; machine-specific
   shortcuts are not included in the source repository.
-- No live paid Codex model invocation was needed or performed. Official stream
+- At the historical Genesis baseline no live paid Codex invocation was needed or performed. Official stream
   parsing is tested with synthetic protocol records; real process attachment is
   tested against an owned local fixture without reading existing private sessions.

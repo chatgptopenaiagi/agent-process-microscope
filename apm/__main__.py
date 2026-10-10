@@ -33,6 +33,8 @@ def parser():
     imported = commands.add_parser('import-codex', help='Import an explicitly selected codex exec --json file; excludes reasoning and messages')
     imported.add_argument('path', type=Path)
     imported.add_argument('--sessions', type=Path, default=DEFAULT_SESSIONS)
+    from apm.observatory.cli import add_commands
+    add_commands(commands)
     return result
 
 
@@ -74,6 +76,10 @@ def import_codex(path, sessions):
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
+        from apm.observatory.cli import run_command
+        handled = run_command(args)
+        if handled is not None:
+            return handled
         if args.command == 'inspect':
             info, events, warnings = read_session(args.session)
             print(json.dumps(dict(session=info, recovered_events=len(events), warnings=warnings), indent=2))

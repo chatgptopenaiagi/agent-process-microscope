@@ -97,6 +97,17 @@ class APMWindow:
         self._sync_controls()
         self._timer = self.root.after(150, self._tick)
 
+    def open_memory(self):
+        from apm.ui.memory_window import MemoryWindow
+        path = Path(self.sessions_var.get()) / 'observatory.sqlite3'
+        if not path.is_file():
+            selected = filedialog.askopenfilename(parent=self.root, title='Select APM memory database',
+                                                   filetypes=[('APM memory', '*.sqlite3'), ('All files', '*')])
+            if not selected:
+                return
+            path = Path(selected)
+        MemoryWindow(tk.Toplevel(self.root), path)
+
     def _build(self):
         p = PALETTE
         self.root.title("APM — Agent Process Microscope")
@@ -176,6 +187,7 @@ class APMWindow:
         ttk.Button(actions, text="Clear view", command=self.clear_view).pack(side="left", padx=4)
         self.open_button = ttk.Button(actions, text="Open session…", command=self.choose_session)
         self.open_button.pack(side="left", padx=4)
+        ttk.Button(actions, text="Memory / Ask…", command=self.open_memory).pack(side="left", padx=4)
         self.replay_controls = ttk.Frame(actions)
         self.replay_controls.pack(side="right")
         self.leave_button = ttk.Button(self.replay_controls, text="Leave replay", command=self.leave_replay)

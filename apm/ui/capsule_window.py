@@ -7,6 +7,10 @@ from apm.evidence.capsule import Capsule
 from apm.evidence.compare import compare
 
 
+from apm.ui.ownership import owner_thread_only
+
+
+@owner_thread_only
 class CapsuleWindow:
     def __init__(self, root, capsule):
         self.root, self.capsule = root, capsule

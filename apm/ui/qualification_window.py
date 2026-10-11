@@ -8,10 +8,41 @@ from tkinter import ttk
 from apm.storage.review import QualificationReview, summary_text
 
 
+from apm.ui.ownership import owner_thread_only
+
+
+def _worker(path, expected_tip, cancel, jobs, results):
+    # No window, bound UI method, callback or Tk variable crosses this boundary.
+    try:
+        with QualificationReview(path, expected_tip=expected_tip, cancelled=cancel.is_set) as review:
+            results.put_nowait((dict(integrity=review.integrity,
+                sessions=review.sessions() if review.available else []), None))
+            while not cancel.wait(.05):
+                try:
+                    operation = jobs.get_nowait()
+                except queue.Empty:
+                    continue
+                try:
+                    result = (operation(review), None)
+                except Exception:
+                    result = (None, 'Review unavailable: invalid session, evidence or bounds. No source writes performed.')
+                finally:
+                    del operation
+                if not cancel.is_set():
+                    results.put_nowait(result)
+                del result
+    except Exception:
+        if not cancel.is_set():
+            results.put_nowait((None, 'Cannot open or verify this database. Unsupported, inaccessible, oversized or cancelled review.'))
+
+
+@owner_thread_only
 class QualificationWindow:
     def __init__(self, root, path, *, session=None, expected_tip=None):
         self.root = root
-        self.closed = False
+        self.closed = self.closing = False
+        self.close_timer = None
+        self.callback = self.loaded
         self.busy = True
         self.cancel = threading.Event()
         self.jobs, self.results = queue.Queue(maxsize=1), queue.Queue(maxsize=1)
@@ -51,7 +82,7 @@ class QualificationWindow:
         self.details = tk.Text(frame, height=12, wrap='word', state='disabled')
         self.details.pack(fill='both', expand=True)
         ttk.Label(frame, textvariable=self.status, wraplength=1120).pack(anchor='w', pady=5)
-        self.worker = threading.Thread(target=self._worker, args=(path, expected_tip), name='APM read-only review', daemon=True)
+        self.worker = threading.Thread(target=_worker, args=(path, expected_tip, self.cancel, self.jobs, self.results), name='APM read-only review', daemon=True)
         self.worker.start()
         self.timer = root.after(50, self.tick)
 
@@ -60,33 +91,14 @@ class QualificationWindow:
         widget.configure(state='normal'); widget.delete('1.0', 'end')
         widget.insert('1.0', value); widget.configure(state='disabled')
 
-    def _worker(self, path, expected_tip):
-        try:
-            with QualificationReview(path, expected_tip=expected_tip, cancelled=self.cancel.is_set) as review:
-                self.results.put((self.loaded, dict(integrity=review.integrity,
-                    sessions=review.sessions() if review.available else []), None))
-                while not self.cancel.wait(.05):
-                    try:
-                        operation, callback = self.jobs.get_nowait()
-                    except queue.Empty:
-                        continue
-                    try:
-                        value = operation(review)
-                        result = (callback, value, None)
-                    except Exception:
-                        result = (callback, None, 'Review unavailable: invalid session, evidence or bounds. No source writes performed.')
-                    if not self.cancel.is_set():
-                        self.results.put_nowait(result)
-        except Exception:
-            if not self.cancel.is_set():
-                self.results.put_nowait((None, None, 'Cannot open or verify this database. Unsupported, inaccessible, oversized or cancelled review.'))
 
     def work(self, operation, callback):
-        if self.busy or self.closed:
+        if self.busy or self.closed or self.closing:
             return
         self.busy = True
         self.previous.configure(state='disabled'); self.next.configure(state='disabled')
-        self.jobs.put_nowait((operation, callback))
+        self.callback = callback
+        self.jobs.put_nowait(operation)
 
     def loaded(self, result):
         integrity = result['integrity']
@@ -139,7 +151,8 @@ class QualificationWindow:
             self.history.append((self.after, self.offset))
             self.after, self.offset = after, self.offset + len(self.records)
             self.show_page(rows)
-        self.work(lambda r: r.page(self.selected_session, after=after), show)
+        session = self.selected_session
+        self.work(lambda r: r.page(session, after=after), show)
 
     def previous_page(self):
         if self.busy or not self.history:
@@ -148,7 +161,8 @@ class QualificationWindow:
         def show(rows):
             self.history.pop(); self.after, self.offset = after, offset
             self.show_page(rows)
-        self.work(lambda r: r.page(self.selected_session, after=after), show)
+        session = self.selected_session
+        self.work(lambda r: r.page(session, after=after), show)
 
     def select_record(self, _=None):
         selected = self.tree.selection()
@@ -162,7 +176,8 @@ class QualificationWindow:
             if self.refs:
                 self.citation.current(0)
             self.set_text(self.details, value['checkpoint'] + '\n' + json.dumps(record, indent=2))
-        self.work(lambda r: r.citations(self.selected_session, record['event']['event_id']), show)
+        session = self.selected_session
+        self.work(lambda r: r.citations(session, record['event']['event_id']), show)
 
     def open_citation(self):
         index = self.citation.current()
@@ -171,10 +186,11 @@ class QualificationWindow:
             self.set_text(self.details, json.dumps(ref['record'], indent=2) if ref['record'] else ref['status'])
 
     def tick(self):
-        if self.closed:
+        if self.closed or self.closing:
             return
         try:
-            callback, value, error = self.results.get_nowait()
+            value, error = self.results.get_nowait()
+            callback, self.callback = self.callback, None
             self.busy = False
             if error:
                 self.status.set(error)
@@ -185,8 +201,28 @@ class QualificationWindow:
             pass
         self.timer = self.root.after(50, self.tick)
 
+    def finish_close(self):
+        self.close_timer = None
+        self.close()
+
     def close(self):
-        self.closed = True
+        if self.closed:
+            return
+        self.closing = True
         self.cancel.set()
         self.root.after_cancel(self.timer)
+        if self.worker.is_alive():
+            self.status.set('Finishing the read-only operation before closing…')
+            if self.close_timer is None:
+                self.close_timer = self.root.after(25, self.finish_close)
+            return
+        self.worker.join()
+        if self.close_timer is not None:
+            self.root.after_cancel(self.close_timer)
+            self.close_timer = None
+        self.callback = None
+        for pending in (self.jobs, self.results):
+            while not pending.empty():
+                pending.get_nowait()
+        self.closed = True
         self.root.destroy()

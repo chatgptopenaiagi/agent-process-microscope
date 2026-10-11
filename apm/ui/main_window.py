@@ -35,6 +35,10 @@ def replay_state_engine():
     return StateEngine()
 
 
+from apm.ui.ownership import owner_thread_only, require_gui_thread
+
+
+@owner_thread_only
 class APMWindow:
     """UI-owned lifecycle and bounded view; all adapter work stays in Controller."""
 
@@ -45,7 +49,8 @@ class APMWindow:
         self.buffer = TimelineBuffer()
         self.controller = None
         self._active = self._starting = self._stopping = self._loading = False
-        self._closing = False
+        self._closing = self.closed = False
+        self.children = []
         self._messages = queue.Queue(maxsize=8)
         self._timer = self._filter_timer = None
         self._pending_session = None
@@ -107,18 +112,18 @@ class APMWindow:
             if not selected:
                 return
             path = Path(selected)
-        MemoryWindow(tk.Toplevel(self.root), path)
+        self.children.append(MemoryWindow(tk.Toplevel(self.root), path))
 
     def open_qualification(self):
         from apm.ui.qualification_window import QualificationWindow
         path = filedialog.askopenfilename(parent=self.root, title='Select evidence database for read-only qualification review',
                                           filetypes=[('APM memory', '*.sqlite3'), ('All files', '*')])
         if path:
-            QualificationWindow(tk.Toplevel(self.root), path)
+            self.children.append(QualificationWindow(tk.Toplevel(self.root), path))
 
     def open_holmes(self):
         from apm.ui.holmes_window import HolmesWindow
-        HolmesWindow(tk.Toplevel(self.root))
+        self.children.append(HolmesWindow(tk.Toplevel(self.root)))
 
     def open_capsule(self):
         from apm.evidence.capsule import Capsule
@@ -327,10 +332,10 @@ class APMWindow:
         self.replay_button.configure(text="Pause replay" if self._replay_playing else "Play replay")
 
     def _error(self, message, error=None):
-        self.footer_var.set(message + (f" ({type(error).__name__}; no private error payload displayed)" if error else ""))
+        self.footer_var.set(message + (f" ({error if isinstance(error, str) else type(error).__name__}; no private error payload displayed)" if error else ""))
 
     def start_observation(self):
-        if self._active or self._starting or self._stopping or self._replay_mode or self._loading:
+        if self.closed or self._closing or self._active or self._starting or self._stopping or self._replay_mode or self._loading:
             return
         workspace = Path(self.workspace_var.get()).expanduser()
         if not workspace.is_dir():
@@ -355,12 +360,13 @@ class APMWindow:
         self.header_detail_var.set("Preparing a local session")
         self._sync_controls()
 
+        factory, messages = self._factory, self._messages
         def start():
             controller = None
             try:
-                controller = self._factory(**settings)
+                controller = factory(**settings)
                 controller.start()
-                self._messages.put(("started", controller, settings))
+                messages.put(("started", controller, settings))
             except Exception as error:
                 if controller is not None:
                     try:
@@ -369,7 +375,7 @@ class APMWindow:
                             controller.wait(timeout=15)
                     except Exception:
                         pass
-                self._messages.put(("start-error", error, None))
+                messages.put(("start-error", type(error).__name__, None))
         threading.Thread(target=start, name="apm-ui-start", daemon=True).start()
 
     def stop_observation(self):
@@ -378,16 +384,16 @@ class APMWindow:
         self._stopping = True
         self.header_detail_var.set("Stopping observation; attached processes continue")
         self._sync_controls()
-        controller = self.controller
+        controller, messages = self.controller, self._messages
 
         def stop():
             try:
                 controller.stop()
                 if hasattr(controller, "wait") and not controller.wait(timeout=15):
                     raise TimeoutError("Observation worker has not finished flushing")
-                self._messages.put(("stopped", None, None))
+                messages.put(("stopped", None, None))
             except Exception as error:
-                self._messages.put(("stop-error", error, None))
+                messages.put(("stop-error", type(error).__name__, None))
         threading.Thread(target=stop, name="apm-ui-stop", daemon=True).start()
 
     def _process_messages(self):
@@ -611,11 +617,12 @@ class APMWindow:
         self.footer_var.set("Reading the selected session. Replay never starts adapters or executes recorded commands.")
         self._sync_controls()
 
+        reader, messages = self._reader, self._messages
         def load():
             try:
-                self._messages.put(("loaded", self._reader(path), path))
+                messages.put(("loaded", reader(path), path))
             except Exception as error:
-                self._messages.put(("load-error", error, None))
+                messages.put(("load-error", type(error).__name__, None))
         threading.Thread(target=load, name="apm-ui-read-session", daemon=True).start()
 
     def _install_replay(self, result, path):
@@ -737,21 +744,36 @@ class APMWindow:
             self.session_vars["Elapsed"].set(duration_text(self._replay_elapsed) + " recorded" if self._replay_mode else duration_text(((self._session_ended or datetime.now(timezone.utc)) - self._session_started).total_seconds()) if self._session_started else "—")
         except Exception as error:
             self._error("A display update could not be completed", error)
-        if self._closing and not (self._active or self._starting or self._stopping):
+        if self._closing and not (self._active or self._starting or self._stopping or self._loading):
             self._destroy()
             return
         self._timer = self.root.after(150, self._tick)
 
     def close(self):
+        if self.closed: return
         self._closing = True
         self._pending_session = None
         self._replay_playing = False
         if self._active:
             self.stop_observation()
-        elif not (self._starting or self._stopping):
+        elif not (self._starting or self._stopping or self._loading):
             self._destroy()
 
     def _destroy(self):
+        for child in self.children:
+            child.close()
+        if any(not child.closed for child in self.children):
+            if self._timer is None:
+                self._timer = self.root.after(25, self._tick)
+            return
+        self.children.clear()
+        self.closed = True
+        # Tcl variable traces own Python callbacks independently of widget commands.
+        # Remove them on the owner before destroying the interpreter.
+        for variable in (self.category_var, self.status_var, self.search_var,
+                         self.mode_var, self.speed_var):
+            for modes, command in variable.trace_info():
+                variable.trace_remove(modes, command)
         for identifier in (self._timer, self._filter_timer):
             if identifier:
                 self.root.after_cancel(identifier)
@@ -760,6 +782,7 @@ class APMWindow:
 
 
 def run_gui(workspace=None, sessions_root=None, pid=None, demo=False, session=None):
+    require_gui_thread()
     root = tk.Tk()
     app = APMWindow(root, workspace, sessions_root, pid, demo)
     if session is not None:

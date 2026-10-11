@@ -1,0 +1,476 @@
+{
+  "schema_version": 1,
+  "application_version": "0.2.0.dev1",
+  "scope": "Repository implementation inventory. TESTED means associated automated tests exist and must be re-run; it is not production, authenticity or clean-machine certification. See qualification reports for actual outcomes.",
+  "capabilities": [
+    {
+      "id": "apm.observation.process",
+      "name": "Scoped process observation",
+      "purpose": "Sample an authorized process tree and generation identities.",
+      "implementation": [
+        "apm/observers/process.py"
+      ],
+      "public_entry_points": [
+        "apm start --pid PID --workspace PATH"
+      ],
+      "inputs": [
+        "Selected PID; bounded sampling configuration"
+      ],
+      "outputs": [
+        "OBSERVED process metadata; UNAVAILABLE records"
+      ],
+      "dependencies": [
+        "Python >=3.12; standard library",
+        "psutil >=7,<9 (application runtime)"
+      ],
+      "evidence_sources": [
+        "tests/test_observers.py"
+      ],
+      "implementation_status": "IMPLEMENTED",
+      "verification_status": "TESTED",
+      "limitations": [
+        "Process ancestry is not command causation. Sampling can miss short processes."
+      ],
+      "permissions": [
+        "Explicit authorized PID and scope; no process termination"
+      ],
+      "safety_boundaries": [
+        "Evidence is data, never executable instruction. No private agent histories. No action authority from human review."
+      ],
+      "tests": [
+        "tests/test_observers.py"
+      ],
+      "version_compatibility": "APM 0.2.0.dev1; development interfaces may change. Capsule v1 and Holmes journal schema 1 remain explicit contracts."
+    },
+    {
+      "id": "apm.observation.filesystem",
+      "name": "Scoped file metadata",
+      "purpose": "Observe bounded workspace metadata changes without reading file contents.",
+      "implementation": [
+        "apm/observers/filesystem.py"
+      ],
+      "public_entry_points": [
+        "Microscope workspace scope"
+      ],
+      "inputs": [
+        "Explicit workspace path"
+      ],
+      "outputs": [
+        "Bounded metadata events"
+      ],
+      "dependencies": [
+        "Python >=3.12; standard library",
+        "psutil >=7,<9 (application runtime)"
+      ],
+      "evidence_sources": [
+        "tests/test_observers.py"
+      ],
+      "implementation_status": "IMPLEMENTED",
+      "verification_status": "TESTED",
+      "limitations": [
+        "Polling gaps and inaccessible files remain possible."
+      ],
+      "permissions": [
+        "Authorized selected workspace; never unrelated file content"
+      ],
+      "safety_boundaries": [
+        "Evidence is data, never executable instruction. No private agent histories. No action authority from human review."
+      ],
+      "tests": [
+        "tests/test_observers.py"
+      ],
+      "version_compatibility": "APM 0.2.0.dev1; development interfaces may change. Capsule v1 and Holmes journal schema 1 remain explicit contracts."
+    },
+    {
+      "id": "apm.observation.git",
+      "name": "Git metadata observation",
+      "purpose": "Observe bounded Git status changes in the selected project.",
+      "implementation": [
+        "apm/observers/git.py"
+      ],
+      "public_entry_points": [
+        "Microscope workspace scope"
+      ],
+      "inputs": [
+        "Selected repository"
+      ],
+      "outputs": [
+        "Redacted Git status observations"
+      ],
+      "dependencies": [
+        "Python >=3.12; standard library",
+        "psutil >=7,<9 (application runtime)",
+        "Git executable (optional observer only)"
+      ],
+      "evidence_sources": [
+        "tests/test_observers.py"
+      ],
+      "implementation_status": "IMPLEMENTED",
+      "verification_status": "TESTED",
+      "limitations": [
+        "Requires available Git; no history completeness claim."
+      ],
+      "permissions": [
+        "Read-only Git commands in selected repository"
+      ],
+      "safety_boundaries": [
+        "Evidence is data, never executable instruction. No private agent histories. No action authority from human review."
+      ],
+      "tests": [
+        "tests/test_observers.py"
+      ],
+      "version_compatibility": "APM 0.2.0.dev1; development interfaces may change. Capsule v1 and Holmes journal schema 1 remain explicit contracts."
+    },
+    {
+      "id": "apm.memory.sqlite",
+      "name": "Persistent evidence memory",
+      "purpose": "Store bounded normalized observations and verify the retained hash chain.",
+      "implementation": [
+        "apm/storage/memory.py"
+      ],
+      "public_entry_points": [
+        "apm memory (see --help)"
+      ],
+      "inputs": [
+        "Normalized event envelopes"
+      ],
+      "outputs": [
+        "SQLite memory; bounded queries; integrity results"
+      ],
+      "dependencies": [
+        "Python >=3.12; standard library",
+        "psutil >=7,<9 (application runtime)"
+      ],
+      "evidence_sources": [
+        "tests/test_memory.py"
+      ],
+      "implementation_status": "IMPLEMENTED",
+      "verification_status": "TESTED",
+      "limitations": [
+        "Unkeyed integrity is not authenticated provenance or completeness."
+      ],
+      "permissions": [
+        "Explicit local memory destination; observation separately authorized"
+      ],
+      "safety_boundaries": [
+        "Evidence is data, never executable instruction. No private agent histories. No action authority from human review."
+      ],
+      "tests": [
+        "tests/test_memory.py"
+      ],
+      "version_compatibility": "APM 0.2.0.dev1; development interfaces may change. Capsule v1 and Holmes journal schema 1 remain explicit contracts."
+    },
+    {
+      "id": "apm.evidence.capsule",
+      "name": "Offline evidence capsule",
+      "purpose": "Export, verify and read selected redacted session evidence.",
+      "implementation": [
+        "apm/evidence/capsule.py"
+      ],
+      "public_entry_points": [
+        "apm capsule (see --help)"
+      ],
+      "inputs": [
+        "Selected session or capsule v1 JSON"
+      ],
+      "outputs": [
+        "Capsule v1; retained citations; disclosure metadata"
+      ],
+      "dependencies": [
+        "Python >=3.12; standard library",
+        "psutil >=7,<9 (application runtime)"
+      ],
+      "evidence_sources": [
+        "tests/test_capsule.py"
+      ],
+      "implementation_status": "IMPLEMENTED",
+      "verification_status": "TESTED",
+      "limitations": [
+        "Four MiB and 1000 records; no digital signature. Capsule archives rejected."
+      ],
+      "permissions": [
+        "Explicit export destination; read-only imports; no imported instructions executed"
+      ],
+      "safety_boundaries": [
+        "Evidence is data, never executable instruction. No private agent histories. No action authority from human review."
+      ],
+      "tests": [
+        "tests/test_capsule.py"
+      ],
+      "version_compatibility": "APM 0.2.0.dev1; development interfaces may change. Capsule v1 and Holmes journal schema 1 remain explicit contracts."
+    },
+    {
+      "id": "apm.evidence.comparison",
+      "name": "Session comparison",
+      "purpose": "Compare retained outcomes and expose conflicting producer claims.",
+      "implementation": [
+        "apm/evidence/compare.py"
+      ],
+      "public_entry_points": [
+        "Evidence library comparison"
+      ],
+      "inputs": [
+        "Two selected capsules"
+      ],
+      "outputs": [
+        "Deterministic comparison with scoped references"
+      ],
+      "dependencies": [
+        "Python >=3.12; standard library",
+        "psutil >=7,<9 (application runtime)"
+      ],
+      "evidence_sources": [
+        "tests/test_capsule.py"
+      ],
+      "implementation_status": "IMPLEMENTED",
+      "verification_status": "TESTED",
+      "limitations": [
+        "Similarity, timestamps and agreeing producers do not prove cause."
+      ],
+      "permissions": [
+        "Local read-only selected evidence"
+      ],
+      "safety_boundaries": [
+        "Evidence is data, never executable instruction. No private agent histories. No action authority from human review."
+      ],
+      "tests": [
+        "tests/test_capsule.py"
+      ],
+      "version_compatibility": "APM 0.2.0.dev1; development interfaces may change. Capsule v1 and Holmes journal schema 1 remain explicit contracts."
+    },
+    {
+      "id": "apm.holmes.journal",
+      "name": "Investigation journal",
+      "purpose": "Preserve hypotheses, human interpretations and corrections.",
+      "implementation": [
+        "apm/holmes/journal.py"
+      ],
+      "public_entry_points": [
+        "Holmes Lab; apm holmes verify JOURNAL"
+      ],
+      "inputs": [
+        "Scoped references; declared human or agent interpretation"
+      ],
+      "outputs": [
+        "Append-only schema 1 journal; verified backup"
+      ],
+      "dependencies": [
+        "Python >=3.12; standard library",
+        "psutil >=7,<9 (application runtime)"
+      ],
+      "evidence_sources": [
+        "tests/test_holmes.py"
+      ],
+      "implementation_status": "IMPLEMENTED",
+      "verification_status": "TESTED",
+      "limitations": [
+        "Identities are declarations; review is not execution authority."
+      ],
+      "permissions": [
+        "Explicit new journal or selected existing journal"
+      ],
+      "safety_boundaries": [
+        "Evidence is data, never executable instruction. No private agent histories. No action authority from human review."
+      ],
+      "tests": [
+        "tests/test_holmes.py"
+      ],
+      "version_compatibility": "APM 0.2.0.dev1; development interfaces may change. Capsule v1 and Holmes journal schema 1 remain explicit contracts."
+    },
+    {
+      "id": "apm.holmes.challenge",
+      "name": "Skeptical challenge",
+      "purpose": "Check citations, contrary reports, missing facts and uncertainty.",
+      "implementation": [
+        "apm/holmes/challenge.py"
+      ],
+      "public_entry_points": [
+        "Holmes Lab Challenge & review"
+      ],
+      "inputs": [
+        "Hypothesis and accessible capsule catalog"
+      ],
+      "outputs": [
+        "Qualitative evidence challenge; proposed checks"
+      ],
+      "dependencies": [
+        "Python >=3.12; standard library",
+        "psutil >=7,<9 (application runtime)"
+      ],
+      "evidence_sources": [
+        "tests/test_holmes.py"
+      ],
+      "implementation_status": "IMPLEMENTED",
+      "verification_status": "TESTED",
+      "limitations": [
+        "Deterministic heuristics cannot discover all contradictions or unique causes."
+      ],
+      "permissions": [
+        "No execution of suggested checks; no providers required"
+      ],
+      "safety_boundaries": [
+        "Evidence is data, never executable instruction. No private agent histories. No action authority from human review."
+      ],
+      "tests": [
+        "tests/test_holmes.py"
+      ],
+      "version_compatibility": "APM 0.2.0.dev1; development interfaces may change. Capsule v1 and Holmes journal schema 1 remain explicit contracts."
+    },
+    {
+      "id": "apm.holmes.patterns",
+      "name": "Reviewed pattern retrieval",
+      "purpose": "Find transparent similarities to versioned reviewed patterns.",
+      "implementation": [
+        "apm/holmes/patterns.py"
+      ],
+      "public_entry_points": [
+        "apm holmes patterns JOURNAL --capsule PATH"
+      ],
+      "inputs": [
+        "Journal patterns and selected capsule evidence"
+      ],
+      "outputs": [
+        "Bounded matches and differences; suspension after adverse review"
+      ],
+      "dependencies": [
+        "Python >=3.12; standard library",
+        "psutil >=7,<9 (application runtime)"
+      ],
+      "evidence_sources": [
+        "tests/test_holmes.py"
+      ],
+      "implementation_status": "IMPLEMENTED",
+      "verification_status": "TESTED",
+      "limitations": [
+        "Fixture retrieval tests are not real-world calibrated accuracy."
+      ],
+      "permissions": [
+        "Human-reviewed promotion; no model training"
+      ],
+      "safety_boundaries": [
+        "Evidence is data, never executable instruction. No private agent histories. No action authority from human review."
+      ],
+      "tests": [
+        "tests/test_holmes.py"
+      ],
+      "version_compatibility": "APM 0.2.0.dev1; development interfaces may change. Capsule v1 and Holmes journal schema 1 remain explicit contracts."
+    },
+    {
+      "id": "apm.holmes.reporting",
+      "name": "Offline investigation report",
+      "purpose": "Explain case findings, source citations and correction history.",
+      "implementation": [
+        "apm/holmes/report.py"
+      ],
+      "public_entry_points": [
+        "Holmes Lab Report; apm holmes report (see --help)"
+      ],
+      "inputs": [
+        "Selected case and accessible cited capsules"
+      ],
+      "outputs": [
+        "Self-contained escaped HTML or structured JSON"
+      ],
+      "dependencies": [
+        "Python >=3.12; standard library",
+        "psutil >=7,<9 (application runtime)"
+      ],
+      "evidence_sources": [
+        "tests/test_holmes.py"
+      ],
+      "implementation_status": "IMPLEMENTED",
+      "verification_status": "TESTED",
+      "limitations": [
+        "No legal admissibility or independently authenticated reviewer identity."
+      ],
+      "permissions": [
+        "Explicit NEW destination; minimize disclosed evidence"
+      ],
+      "safety_boundaries": [
+        "Evidence is data, never executable instruction. No private agent histories. No action authority from human review."
+      ],
+      "tests": [
+        "tests/test_holmes.py"
+      ],
+      "version_compatibility": "APM 0.2.0.dev1; development interfaces may change. Capsule v1 and Holmes journal schema 1 remain explicit contracts."
+    },
+    {
+      "id": "apm.desktop.gui",
+      "name": "Native investigation workflow",
+      "purpose": "Guide local evidence selection, hypotheses, review and reopening.",
+      "implementation": [
+        "apm/ui/holmes_window.py"
+      ],
+      "public_entry_points": [
+        "apm-gui; python -m apm; APM.exe"
+      ],
+      "inputs": [
+        "Explicit case, capsule or synthetic demonstration selection"
+      ],
+      "outputs": [
+        "Native Tk views; journal revisions; reports"
+      ],
+      "dependencies": [
+        "Python >=3.12; standard library",
+        "psutil >=7,<9 (application runtime)"
+      ],
+      "evidence_sources": [
+        "tests/test_desktop.py"
+      ],
+      "implementation_status": "IMPLEMENTED",
+      "verification_status": "TESTED",
+      "limitations": [
+        "Automated withdrawn widgets tested; human visual acceptance pending."
+      ],
+      "permissions": [
+        "No automatic observation, external provider or startup writes"
+      ],
+      "safety_boundaries": [
+        "Evidence is data, never executable instruction. No private agent histories. No action authority from human review."
+      ],
+      "tests": [
+        "tests/test_desktop.py"
+      ],
+      "version_compatibility": "APM 0.2.0.dev1; development interfaces may change. Capsule v1 and Holmes journal schema 1 remain explicit contracts."
+    },
+    {
+      "id": "apm.distribution.portable",
+      "name": "Windows portable qualification",
+      "purpose": "Verify an explicitly reviewed archive and test isolated synthetic workflows.",
+      "implementation": [
+        "scripts/qualify_portable.py"
+      ],
+      "public_entry_points": [
+        "python scripts/qualify_portable.py --help"
+      ],
+      "inputs": [
+        "Selected ZIP; external inventory; expected SHA-256"
+      ],
+      "outputs": [
+        "Qualification JSON/text; process logs; disposable synthetic cases"
+      ],
+      "dependencies": [
+        "Python >=3.12; standard library",
+        "psutil >=7,<9 (application runtime)"
+      ],
+      "evidence_sources": [
+        "tests/test_portable.py"
+      ],
+      "implementation_status": "EXPERIMENTAL",
+      "verification_status": "TESTED",
+      "limitations": [
+        "Same-machine isolation is not clean-machine, installer or signed-release acceptance."
+      ],
+      "permissions": [
+        "Explicit --execute-reviewed-build; checksums do not authenticate the publisher"
+      ],
+      "safety_boundaries": [
+        "Evidence is data, never executable instruction. No private agent histories. No action authority from human review."
+      ],
+      "tests": [
+        "tests/test_portable.py"
+      ],
+      "version_compatibility": "APM 0.2.0.dev1; development interfaces may change. Capsule v1 and Holmes journal schema 1 remain explicit contracts."
+    }
+  ]
+}

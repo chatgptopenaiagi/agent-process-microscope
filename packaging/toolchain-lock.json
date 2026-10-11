@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "python": "3.14.7 (tags/v3.14.7:823f032, Aug  5 2026, 10:51:32) [MSC v.1944 64 bit (AMD64)]",
+  "distributions": [
+    {
+      "name": "pyinstaller",
+      "version": "6.22.3",
+      "files": 573,
+      "inventory_sha256": "a0012a1a9a5f3fd06c9a2d5d04e77a5b97e43a86dc40bb7531c68e89926a6309"
+    },
+    {
+      "name": "pyinstaller-hooks-contrib",
+      "version": "2026.7",
+      "files": 717,
+      "inventory_sha256": "9db2385a88b37706ed88d76d90f9c33367847176dd5aa206ec31c00f45b9e54d"
+    },
+    {
+      "name": "altgraph",
+      "version": "0.17.5",
+      "files": 14,
+      "inventory_sha256": "de3657929b922bdd4ac931ff1026419ccef339addda5a5273aa8ecf17b2aac07"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "files": 30,
+      "inventory_sha256": "116a25dad3608e7fb7443dad28432975e77d61d3660a24317383c573e9762e3c"
+    },
+    {
+      "name": "pefile",
+      "version": "2024.8.26",
+      "files": 12,
+      "inventory_sha256": "e4db6d3a8e73f1df34561bfc358fa54d9f50434c9a1ca8611871a6c19dd283b1"
+    },
+    {
+      "name": "pywin32-ctypes",
+      "version": "0.2.3",
+      "files": 40,
+      "inventory_sha256": "ea4ac3ce0fb16dc61423c2144a0e1deaf739435da4630e972abc0ec3a9ad075d"
+    },
+    {
+      "name": "setuptools",
+      "version": "84.0.0",
+      "files": 344,
+      "inventory_sha256": "19fa9bc65a350e696527edd20ca461c29768250ab4d71da9470f3eafe3c3dde1"
+    },
+    {
+      "name": "pip",
+      "version": "26.2.1",
+      "files": 478,
+      "inventory_sha256": "cfbae589bd5d5529fa79a3d7fc100f90a34e683815134a57929e4b2885e59196"
+    },
+    {
+      "name": "psutil",
+      "version": "7.2.2",
+      "files": 18,
+      "inventory_sha256": "6c5ed4b3f43a1b416076208e4c8af6d6e797e0f69123be745964365c73cec30d"
+    }
+  ],
+  "python_runtime_files": 2598,
+  "python_runtime_inventory_sha256": "b69c5c574f9dac328c194b579de16584e5c6804d2708414d28f4ce2ee53bce62",
+  "provenance": "Local installed files only; upstream authenticity and clean-environment reconstruction UNVERIFIED"
+}

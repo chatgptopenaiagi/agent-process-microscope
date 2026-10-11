@@ -1,5 +1,15 @@
 # Security and privacy
 
+Portable software qualification is an explicit engineering action, separate from
+passive capsule review. The verifier requires an operator-selected checksum and
+external reviewed file manifest, checks archive paths and resource limits before
+execution, and never treats imported case content as an execution grant. Hashes
+do not establish publisher authenticity. See
+[qualification boundaries](docs/INDEPENDENT_QUALIFICATION.md). Do not use the
+qualification execution flag for unreviewed downloads. Generated logs, build
+inventories with local context, synthetic case databases and qualification reports
+stay outside Git. No global permissions are weakened for tests or packaging.
+
 ## Reporting a suspected vulnerability
 
 Do not include credentials, private agent sessions, unrestricted command output,

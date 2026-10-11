@@ -162,7 +162,7 @@ For the idle GUI without a console helper:
 .\.venv\Scripts\pythonw.exe .\Launch-APM.pyw
 ```
 
-Choose **Attach process**, select a workspace and enter its existing root PID, then
+Open **Advanced tools → Microscope: observation and replay**, choose **Attach process**, select a workspace and enter its existing root PID, then
 press **Start observation**. No observation begins merely by opening the idle GUI.
 There is no standalone Windows EXE or installer in this repository.
 
@@ -191,8 +191,8 @@ corruption in the middle. [Replay and durability](docs/REPLAY_MODEL.md).
 
 In the GUI, **Open session** loads a recording and **Play replay** presents its events.
 Replay reconstructs conservative states from the event history without starting adapters.
-The default session location is beside the installed `apm` package; in a source
-checkout it is the repository's `sessions/` directory. Live sessions can choose
+Installed sessions default to the per-user APM data folder; in a source
+checkout the CLI default remains the repository's `sessions/` directory. Live sessions can choose
 another directory with `--sessions` or the GUI field.
 
 ## Security and limitations

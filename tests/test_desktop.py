@@ -33,7 +33,7 @@ class DesktopTests(unittest.TestCase):
             self.root.update(); time.sleep(.02)
         self.root.update()
         self.assertFalse(self.window.busy)
-        self.assertNotIn('rejected', self.window.status.get())
+        self.assertEqual(self.window.operation_status, 'PASS', self.window.operation_error)
 
     def test_welcome_has_no_side_effects_and_keyboard_navigation(self):
         w = self.window
@@ -129,8 +129,21 @@ class DesktopTests(unittest.TestCase):
         while not self.window.closed and time.monotonic() < deadline:
             self.root.update(); time.sleep(.02)
         self.assertTrue(self.window.closed)
+        self.assertEqual(self.window.operation_status, 'PASS', self.window.operation_error)
         self.assertTrue(completed.is_file())
         self.assertEqual(callbacks, [])
+
+    def test_permission_failure_has_explicit_outcome_without_private_error_text(self):
+        def denied(): raise PermissionError('SYNTHETIC_PRIVATE_PATH')
+        self.window.submit(denied, lambda _: self.fail('Failure must not call success callback'))
+        deadline = time.monotonic() + 5
+        while self.window.busy and time.monotonic() < deadline:
+            self.root.update(); time.sleep(.02)
+        self.assertEqual(self.window.operation_status, 'FAIL')
+        self.assertEqual(self.window.operation_error, 'PermissionError')
+        self.assertNotIn('SYNTHETIC_PRIVATE_PATH', self.window.status.get())
+        self.assertIn('not accessible', self.window.status.get())
+        self.window.submit(lambda: None, lambda _: None); self.wait()
 
 
 class PathPolicyTests(unittest.TestCase):

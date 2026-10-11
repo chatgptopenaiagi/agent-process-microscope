@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 from uuid import uuid4
+from build_provenance import verify_lock, deterministic_zip
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -20,11 +21,13 @@ def digest(path): return hashlib.sha256(path.read_bytes()).hexdigest()
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--destination', type=Path, required=True)
+    parser.add_argument('--source-date-epoch', type=int, default=1791676800, help='Fixed build timestamp, recorded in the manifest')
     parser.add_argument('--restricted-temp-compat', action='store_true', help='Explicit build-only inherited-permission temp accommodation; does not change global ACLs')
     args = parser.parse_args()
     destination = args.destination.resolve()
     if sys.platform != 'win32' or platform.machine() != 'AMD64': raise RuntimeError('Windows x64 build required')
     if not destination.is_relative_to(ROOT / 'cache') or destination.exists(): raise ValueError('Choose a NEW project cache directory')
+    locked = verify_lock(ROOT / 'packaging/build-requirements.txt', ROOT / 'packaging/toolchain-lock.json')
     expected = {}
     for line in (ROOT / 'packaging/build-requirements.txt').read_text().splitlines():
         if line.strip() and not line.startswith('#'):
@@ -44,10 +47,14 @@ def main():
     for name in ('entry.py', 'apm.spec', 'version.txt', 'build_wheel.py'):
         shutil.copyfile(ROOT / 'packaging' / name, source / name)
         inventory.append(dict(path='packaging/' + name, sha256=digest(source / name)))
+    for name in ('scripts/build_windows.py', 'scripts/build_provenance.py',
+                 'packaging/build-requirements.txt', 'packaging/toolchain-lock.json'):
+        inventory.append(dict(path=name, sha256=digest(ROOT / name)))
     env = dict(os.environ)
     env.pop('PYTHONPATH', None); env['PYTHONNOUSERSITE'] = '1'
     env['PYINSTALLER_CONFIG_DIR'] = str(destination / 'freezer-cache')
     env['PYTHONHASHSEED'] = '0'
+    env['SOURCE_DATE_EPOCH'] = str(args.source_date_epoch)
     def run(arguments, log, timeout=300):
         with (destination / log).open('xb') as output:
             result = subprocess.run([sys.executable, *arguments], cwd=source, env=env,
@@ -82,6 +89,9 @@ def main():
         application_runtime=['Python', 'Tcl/Tk', 'SQLite (public domain)', 'psutil'],
         provenance='Local installed toolchain; not an upstream signature verification',
         release_status='DEVELOPMENT ONLY; clean-machine installation, signing and installer lifecycle unverified'), indent=2))
+    (bundle / 'BUILD-INPUTS.json').write_text(json.dumps(dict(application_version='0.2.0.dev1',
+        source=inventory, toolchain=locked, source_date_epoch=args.source_date_epoch,
+        license_status='Notices retained; full transitive binary redistribution review PENDING'), indent=2))
     (bundle / 'START-HERE.txt').write_text('APM 0.2.0.dev1 — local development build\n\nOpen APM.exe for Holmes Lab. No observation starts automatically.\n'
         'Try the clearly labeled synthetic demonstration. Cases default to your local application-data APM folder.\n'
         'APM-cli.exe provides advanced commands and explicit desktop-check qualification.\n'
@@ -96,8 +106,10 @@ def main():
         raise RuntimeError('Private evidence or key extension in package')
     (destination / 'artifact-manifest.json').write_text(json.dumps(dict(source=inventory, bundle=files,
         build_dependencies=expected, restricted_temp_compat=args.restricted_temp_compat,
-        python=sys.version, platform=platform.platform()), indent=2))
-    archive = Path(shutil.make_archive(str(destination / 'APM-0.2.0.dev1-windows-x64-portable'), 'zip', bundle.parent, bundle.name))
+        python=sys.version, platform=platform.platform(), source_date_epoch=args.source_date_epoch,
+        toolchain=locked, reproducibility='Fixed inputs and ZIP metadata; bitwise result must be independently compared'), indent=2))
+    archive = destination / 'APM-0.2.0.dev1-windows-x64-portable.zip'
+    deterministic_zip(bundle, archive, args.source_date_epoch)
     artifacts = [archive, *wheel_dir.glob('*.whl')]
     (destination / 'SHA256SUMS').write_text(''.join(digest(p) + '  ' + p.name + '\n' for p in artifacts), encoding='ascii')
     print(json.dumps(dict(build='COMPLETED', destination=str(destination), bundle_files=len(files), artifacts=[p.name for p in artifacts])))

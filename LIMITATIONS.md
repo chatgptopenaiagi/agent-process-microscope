@@ -8,6 +8,15 @@ qualification and installer delivery remain incomplete. The SQL hash chain detec
 certain modifications; it does not authenticate sources or prove completeness.
 New SQL recording is additional to the Genesis JSONL format described below.
 
+Holmes Lab adds tested persistent interpretations and corrections, deterministic
+challenges, minimized reports and a first reviewed-pattern subset. Reviewer/source
+identity is still declared; hashes are unkeyed; causal wording detection is a lexical
+heuristic. Pattern matching is exact metadata resemblance, with only tiny labeled
+fixture evaluation. Native pattern promotion and a full validation registry remain
+unfinished. The two-role cooperation demonstration is synthetic local data, not
+authenticated live model communication. Visible Holmes GUI acceptance and packaged
+application lifecycle qualification remain unverified. See [Holmes scope](docs/HOLMES.md).
+
 - Windows is the exercised target. Cross-platform abstractions do not constitute
   verified WSL/Linux/remote support.
 - Attach, demo and passive replay/import work. Managed agent launch is deferred.

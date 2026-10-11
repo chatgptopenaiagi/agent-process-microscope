@@ -41,7 +41,7 @@ def add_commands(commands):
     memory = commands.add_parser('memory', help='SQL history, investigation, integrity, backup and human notes')
     memory.add_argument('database', type=Path)
     memory.add_argument('--session')
-    memory.add_argument('--operation', choices=('sessions', 'events', 'ask', 'verify', 'backup', 'note', 'gui'), default='sessions')
+    memory.add_argument('--operation', choices=('sessions', 'events', 'ask', 'verify', 'backup', 'note', 'gui', 'review'), default='sessions')
     memory.add_argument('--after', type=int, default=0)
     memory.add_argument('--search', default='')
     memory.add_argument('--destination', type=Path)
@@ -146,11 +146,15 @@ def _run(args):
         params = dict(after=args.after, search=args.search) if args.operation == 'events' else {}
         print(json.dumps(request(args.port, cap['credential'], args.operation, **params), indent=2))
         return 0
-    if args.operation == 'gui':
+    if args.operation in ('gui', 'review'):
         import tkinter as tk
         from apm.ui.memory_window import MemoryWindow
         root = tk.Tk()
-        MemoryWindow(root, args.database)
+        if args.operation == 'review':
+            from apm.ui.qualification_window import QualificationWindow
+            QualificationWindow(root, args.database, session=args.session, expected_tip=args.expected_tip)
+        else:
+            MemoryWindow(root, args.database)
         root.mainloop()
         return 0
     with Memory(args.database, readonly=args.operation not in ('note', 'ask')) as memory:

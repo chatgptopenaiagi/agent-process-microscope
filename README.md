@@ -13,6 +13,15 @@ evidence-cited local investigations and human notes. Optional independent receiv
 and companion commands provide authenticated, session-scoped cooperation without
 a cloud account or new dependencies. See the [working slice and commands](docs/OBSERVATORY.md)
 and [measured validation / remaining gaps](docs/ENGINEERING_PROGRESS.md).
+**Qualification review…** explicitly opens a database read-only, pages the full
+selected session, shows integrity and resolves saved investigation citations.
+It uses a fixed verified snapshot and preserves the original Memory / Ask workflow.
+See the [review contract](docs/OBSERVATORY.md#read-only-qualification-review) and
+[Windows distribution assessment](docs/DISTRIBUTION.md).
+**Offline evidence capsules:** export a selected session with explicit disclosure,
+verify/import it read-only, resolve citations and compare two sessions without a
+model or network connection. Use **Open capsule…** or the `apm capsule` commands.
+See [Capsules v1](docs/CAPSULES.md) and the [staged cognitive architecture](docs/COGNITIVE_ARCHITECTURE.md).
 An owner-run protected Codex workload has been checked against retained local
 evidence: 5 public reports, a completed failing command and turn, and 108 verified
 SQL records. This qualifies one engineering slice; account identity, command-to-PID
@@ -192,6 +201,12 @@ certification or universal attribution. Private reasoning inspection is outside
 the project's purpose. [Current limitations](LIMITATIONS.md).
 
 ## Testing
+
+The local **Holmes Lab** extension adds persistent hypotheses, opposing citations,
+deterministic challenges, append-only human corrections and readable case reports.
+Start it with `.\.venv\Scripts\python.exe -m apm holmes gui` or the native window's
+Holmes Lab button. [Workflow, API, bounds and limitations](docs/HOLMES.md).
+It does not execute proposed checks or enable model providers.
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v

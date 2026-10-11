@@ -35,6 +35,10 @@ def parser():
     imported.add_argument('--sessions', type=Path, default=DEFAULT_SESSIONS)
     from apm.observatory.cli import add_commands
     add_commands(commands)
+    from apm.evidence.cli import add_commands as add_capsule_commands
+    add_capsule_commands(commands)
+    from apm.holmes.cli import add_commands as add_holmes_commands
+    add_holmes_commands(commands)
     return result
 
 
@@ -76,6 +80,14 @@ def import_codex(path, sessions):
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
+        from apm.holmes.cli import run_command as run_holmes_command
+        handled = run_holmes_command(args)
+        if handled is not None:
+            return handled
+        from apm.evidence.cli import run_command as run_capsule_command
+        handled = run_capsule_command(args)
+        if handled is not None:
+            return handled
         from apm.observatory.cli import run_command
         handled = run_command(args)
         if handled is not None:

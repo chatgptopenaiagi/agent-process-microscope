@@ -108,6 +108,30 @@ class APMWindow:
             path = Path(selected)
         MemoryWindow(tk.Toplevel(self.root), path)
 
+    def open_qualification(self):
+        from apm.ui.qualification_window import QualificationWindow
+        path = filedialog.askopenfilename(parent=self.root, title='Select evidence database for read-only qualification review',
+                                          filetypes=[('APM memory', '*.sqlite3'), ('All files', '*')])
+        if path:
+            QualificationWindow(tk.Toplevel(self.root), path)
+
+    def open_holmes(self):
+        from apm.ui.holmes_window import HolmesWindow
+        HolmesWindow(tk.Toplevel(self.root))
+
+    def open_capsule(self):
+        from apm.evidence.capsule import Capsule
+        from apm.ui.capsule_window import CapsuleWindow
+        path = filedialog.askopenfilename(parent=self.root, title='Open read-only evidence capsule',
+                                          filetypes=[('APM evidence capsule', '*.apmcapsule')])
+        if path:
+            try:
+                capsule = Capsule.open(path)
+            except (ValueError, OSError):
+                self._error('Capsule unavailable or invalid. No evidence changed.')
+                return
+            CapsuleWindow(tk.Toplevel(self.root), capsule)
+
     def _build(self):
         p = PALETTE
         self.root.title("APM — Agent Process Microscope")
@@ -188,6 +212,9 @@ class APMWindow:
         self.open_button = ttk.Button(actions, text="Open session…", command=self.choose_session)
         self.open_button.pack(side="left", padx=4)
         ttk.Button(actions, text="Memory / Ask…", command=self.open_memory).pack(side="left", padx=4)
+        ttk.Button(actions, text="Qualification review…", command=self.open_qualification).pack(side="left", padx=4)
+        ttk.Button(actions, text="Open capsule…", command=self.open_capsule).pack(side="left", padx=4)
+        ttk.Button(actions, text="Holmes Lab…", command=self.open_holmes).pack(side="left", padx=4)
         self.replay_controls = ttk.Frame(actions)
         self.replay_controls.pack(side="right")
         self.leave_button = ttk.Button(self.replay_controls, text="Leave replay", command=self.leave_replay)

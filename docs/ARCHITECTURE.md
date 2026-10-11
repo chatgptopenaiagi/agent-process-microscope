@@ -79,3 +79,43 @@ The UI's **Dropped** count combines event-bus and display-queue drops. Session m
 ## Execution boundary
 
 The GUI, replay, and demo do not require PowerShell helpers. Git observation uses bounded, hidden Git subprocesses on Windows with `shell=False`; those are APM-owned helpers, not the attached workload. The local Python windowed launcher is a convenience entry point, not a standalone executable or signed installer. See [Security](../SECURITY.md) for scope and disclosure limits.
+## Read-only qualification review extension
+
+`apm.storage.review.QualificationReview` uses `Memory.read_snapshot` to copy an
+explicitly selected, read-only SQLite source into a bounded query-only in-memory
+snapshot. Existing schema, observers, receiver and recorder are unchanged.
+Integrity verification gates evidence display. Full-session summary scans and
+keyset pagination share the same snapshot; event-ID lookup resolves same-session
+citations, including earlier pages. Saved investigation checkpoints are compared
+with their referenced receipts, separately from whole-database integrity.
+
+`apm.ui.qualification_window.QualificationWindow` owns one SQL worker with bounded
+queues and cancellation. Tk displays sanitized results, complete page ranges,
+evidence classes, chain tips and a human-readable summary. This separate read-only
+window has no write or execution control. `memory --operation review` and the
+main-window file picker expose it without changing Genesis or Memory / Ask.
+See [review contract](OBSERVATORY.md#read-only-qualification-review) and
+[distribution assessment](DISTRIBUTION.md).
+
+## Portable evidence and deterministic comparison
+
+`apm.evidence.capsule` consumes the verified read-only review snapshot, exports an
+explicit disclosure to bounded JSON, and validates imports into an isolated
+read-only context. `apm.evidence.compare` derives cited similarities and conflicts
+between two capsule sessions. `apm.ui.capsule_window` presents imported provenance
+as declarations and keeps proposed checks separate from execution authority.
+Existing event classes, SQL schema, receiver and recorder remain unchanged.
+See [capsule operations](CAPSULES.md), the [architecture decision](decisions/0001-capsules.md)
+and [component/extension boundaries](COGNITIVE_ARCHITECTURE.md).
+
+## Holmes interpretations
+
+`apm.holmes.model` binds capsule/session/event references. `journal` persists
+versioned hypotheses, corrections and declared reviews in separate schema-1 SQLite
+storage; no observation migration or source write occurs. `challenge` produces
+bounded deterministic skepticism. `patterns` retrieves explicit reviewed matches
+with alternatives/limitations, and `report` exports new minimized HTML/JSON files.
+`cooperation` validates offline assessment envelopes without any provider or action
+execution. `apm.ui.holmes_window` gives these journal operations a single-worker
+native workflow. See [operations and bounds](HOLMES.md) and
+[journal decision](decisions/0002-holmes-journal.md).

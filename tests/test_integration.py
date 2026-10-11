@@ -26,13 +26,26 @@ class IntegrationTests(unittest.TestCase):
             controller = Controller(workspace, root / 'sessions', specimen.pid)
             try:
                 controller.start()
-                deadline = time.monotonic() + 5
-                while controller.status == 'starting' and time.monotonic() < deadline:
+                # Recording status precedes adapter initialization. Wait for the
+                # real baseline, not a fixed sleep that races slower startup.
+                seen = []
+                deadline = time.monotonic() + 12
+                while time.monotonic() < deadline:
+                    seen.extend(controller.drain())
+                    if any(e.source == 'filesystem' and e.metadata.get('observation_kind') == 'SNAPSHOT' for e in seen):
+                        break
+                    self.assertNotEqual(controller.status, 'error', controller.error)
                     time.sleep(.05)
-                time.sleep(1)
+                self.assertTrue(any(e.source == 'filesystem' and e.metadata.get('observation_kind') == 'SNAPSHOT' for e in seen),
+                                'Filesystem baseline was not observed within the startup bound')
                 (workspace / 'observed.py').write_text('print("hello")\n')
                 (root / 'outside.py').write_text('not in scope')
-                time.sleep(2.8)
+                deadline = time.monotonic() + 10
+                while time.monotonic() < deadline:
+                    seen.extend(controller.drain())
+                    if any(e.source == 'filesystem' and 'observed.py' in e.target for e in seen):
+                        break
+                    time.sleep(.05)
                 controller.stop()
                 self.assertTrue(controller.wait(15))
                 self.assertEqual(controller.status, 'stopped', controller.error)

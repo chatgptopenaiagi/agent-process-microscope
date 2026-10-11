@@ -27,6 +27,7 @@ recordings/
 screenshots/
 captures/
 *.bundle
+*.apmcapsule
 *.exe
 *.dll
 *.pyd

@@ -1,5 +1,12 @@
 # Architecture
 
+Mission 005 adds an external software qualification boundary and a validated
+[capability inventory](../capabilities/apm-capabilities-v1.json). It changes neither
+evidence serialization nor source observation. See the
+[qualification decision](decisions/0004-independent-qualification.md) and
+[operation guide](INDEPENDENT_QUALIFICATION.md). Reviewed build execution is separate
+from passive evidence import and never derives authority from a case assessment.
+
 This page describes the preserved Genesis flow. The [Observatory extension](OBSERVATORY.md)
 adds a SQL subscriber after JSONL recording, independent optional receiver/companion
 processes, and a native memory/investigation window. SQL and JSONL are not one atomic

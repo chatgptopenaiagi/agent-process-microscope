@@ -1,5 +1,51 @@
 # Living Observatory engineering checkpoint
 
+## Mission 005: independent qualification, 2026-10-11
+
+The immutable cognitive and desktop checkpoints were reconstructed and their
+complete trees and bundles checked against retained manifests. GitHub still has
+only main and the Living Observatory checkpoint. Read-only GitHub commit lookup
+found neither subsequent commit. Shell Git cannot reach the configured proxy;
+the connector's prior mandatory-approval denial remains unresolved. No publication,
+merge, release or protected-engine change is claimed.
+
+Implemented a standalone bounded portable verifier, explicit GUI operation
+outcomes (including worker completion during shutdown), a twelve-component
+capability inventory with closed-schema/local-reference validation, build input
+hash locks and deterministic ZIP serialization. Corrected outdated workflow
+labels and installed-data-path documentation. Existing reports already provide
+readable summaries, escaped content and correction history; their evidence format
+was preserved. No automatic recent-case scan or external provider was introduced.
+
+Baseline: 135 compatibility passes; standard 135 tests, three failures and 102
+error entries. Final source: 151 compatibility passes; standard 151 tests, four
+failures and 102 error entries. Independent no-APM permission and Git probes
+reproduce inaccessible private temporary directories under a restricted token;
+inherited-permission fixtures succeed. New explicit outcomes expose fixture
+PermissionError earlier. Owner-shell testing is PENDING OWNER EXECUTION.
+
+The original portable ZIP and newly built portable application both pass the
+external same-machine verifier. Both executables complete synthetic native-widget
+workflows and a fresh OS process verifies each retained four-revision journal.
+Two identical-input build directories produced identical ZIP and wheel bytes.
+A final documentation-refreshed build was separately qualified; the final wheel
+was installed and exercised in a disposable isolated environment. No clean-machine,
+ordinary-user, human-visual, installer or public-release acceptance is claimed.
+
+The retained owner database still has 108 integrity-verified records and 21
+resolved citations. Database/WAL and protected engine hashes match the baseline.
+No genuine Codex workload was repeated. Source evidence remains separate from
+interpretations, and no execution authority was introduced.
+
+See [qualification](INDEPENDENT_QUALIFICATION.md),
+[distribution gates](DISTRIBUTION.md), and the
+[capability contract](../capabilities/apm-capabilities-v1.json).
+Detailed paths, hashes, full logs and publication scripts are retained locally in
+ignored mission reports, not published source. Next: run the audited final portable
+candidate in a clean ordinary-user Windows VM without Python/Codex, capture the
+visible demonstration/reopen/report checklist and preserve results.
+
+
 ## Latest: unattended desktop engineering checkpoint, 2026-10-10
 
 Checkpoint A is preserved locally at `1f43147758c4ba88ac4af8b32ce42f49b25e3995`

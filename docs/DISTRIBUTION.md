@@ -1,5 +1,41 @@
 # Windows distribution assessment
 
+## Mission 005: independent development qualification
+
+Use the [portable verifier and capability inventory](INDEPENDENT_QUALIFICATION.md)
+for the next acceptance gate. Historical artifact checks below remain scoped to
+their recorded builds. No installer or release is published.
+
+The build now requires `packaging/toolchain-lock.json`: nine installed distribution
+inventories and the selected Python runtime content must match before building.
+The lock records local content, not an upstream signature. An independently
+reconstructed clean toolchain from authenticated, hash-pinned downloads remains
+UNVERIFIED. Generate a replacement lock only as an explicitly reviewed dependency
+change, never as a routine workaround for drift. No new build dependency was added.
+
+`scripts/build_provenance.py` fixes ZIP entry order, timestamps and permissions.
+The build records a fixed `SOURCE_DATE_EPOCH` and `PYTHONHASHSEED`, source hashes,
+toolchain hashes, dependency versions and a `BUILD-INPUTS.json` inside the bundle.
+PyInstaller supports a fixed PE timestamp through
+[SOURCE_DATE_EPOCH](https://github.com/pyinstaller/pyinstaller/blob/develop/PyInstaller/building/api.py).
+This mechanism alone does not prove reproducibility. Two independent build
+directories on the same host produced identical portable ZIP and wheel bytes in
+Mission 005. That comparison does not establish reproducibility on another host,
+Python installation, toolchain or source revision. Retain each build's manifest.
+
+The initial distribution should remain a portable ZIP. It avoids installer-owned
+state and can keep application files separate from user cases. It does not supply
+Start-menu integration, managed upgrades, rollback, uninstall validation or verified
+publisher identity. A per-user installer can follow clean ordinary-user acceptance;
+MSI and automatic updates are not prerequisites for an initial portable candidate.
+Do not adopt WiX 7, accept license terms, buy certificates or enable updates implicitly.
+
+Python, psutil, Tcl/Tk and available build-tool license texts are retained. The
+runtime inventory identifies binaries by digest, but complete transitive DLL
+version/redistribution obligations (including Microsoft runtime components) still
+need review before external distribution. Neither a successful build nor included
+license files are a legal clearance. Executables remain unsigned development builds.
+
 ## Current desktop development qualification — 0.2.0.dev1
 
 Local Windows x64 portable executables and a developer wheel have now been built.
@@ -45,7 +81,7 @@ The resulting `artifact-manifest.json` records every source and bundled file;
 folder; keep it together and open `APM.exe`. `APM-cli.exe desktop-check <NEW-folder>`
 runs a bounded, explicitly synthetic qualification. Nothing executes on normal
 startup. Build scripts and pins support repeatability; byte-for-byte reproducibility
-across independent builders is **UNVERIFIED** (timestamps/toolchain provenance remain).
+across independent builders is **UNVERIFIED** (see the scoped Mission 005 comparison).
 
 ### Actual acceptance scope
 

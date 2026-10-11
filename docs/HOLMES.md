@@ -14,28 +14,28 @@ forensic tooling. See [architecture decision](decisions/0002-holmes-journal.md).
 .\.venv\Scripts\python.exe -m apm holmes gui .\reports\my-investigation.sqlite3
 ```
 
-The ordinary APM window also has **Holmes Lab…**. Existing observation, replay,
-Memory/Ask, qualification review and capsule review remain available.
+APM opens Holmes Lab by default. Advanced tools opens the original microscope;
+observation, replay, Memory/Ask, qualification review and capsule review remain available.
 
-1. Choose **New journal…** and a new `.sqlite3` destination, or **Open journal…**.
+1. Choose **Create a case** and a new `.sqlite3` destination, or **Open an existing case**.
    Do not select an observation database: it has a different format and is rejected.
-2. Choose **Open capsule…** for each explicitly selected evidence source. Import
+2. Choose **Open evidence capsule** for each explicitly selected evidence source. Import
    verifies its structure and internal checksums. This does not authenticate its
    producer. Nothing is copied into the source database or capsule.
-3. On **Select evidence**, browse 100-record pages. Select a record and choose
+3. On **Evidence**, browse 100-record pages. Select a record and choose
    **Use as support** or **Use as contradiction**. Source classes are exporter
    declarations; synthetic events remain synthetic.
-4. On **Holmes Lab**, enter the case title, purpose, declared reviewer, explanation,
+4. On **Explanation**, enter the case title, purpose, declared reviewer, explanation,
    uncertainty, alternatives, missing evidence and proposed checks. Choose
-   **Create hypothesis**. Multiple explanations can share a case.
-5. Select a saved hypothesis. **Resolve saved citation** opens its underlying
+   **Save new explanation**. Multiple explanations can share a case.
+5. Select a saved hypothesis. **Inspect saved citation** opens its underlying
    record. The advanced tab exposes the complete structured record when needed.
-6. **Challenge evidence** checks citations, conflicting final reports, omissions,
+6. **Challenge selected explanation** checks citations, conflicting final reports, omissions,
    source classes and knowledge limits. It never runs the proposed checks.
 7. Choose a review state, enter a reason and **Record assessment**. Use
-   **Correct assessment** to append a correction. **Save revised hypothesis**
+   **Correct earlier assessment** to append a correction. **Revise selected**
    appends changed claim/evidence and returns its review state to PROPOSED.
-8. **Revision history** shows the entire journal through 100-entry pages. Select
+8. **History** shows the entire journal through 100-entry pages. Select
    any revision for its explanation and advanced structure. No earlier assessment
    is erased. REJECTED and SUPERSEDED are review states, not deletion operations.
 9. **Export report…** writes a new HTML or JSON file for the selected case. Existing

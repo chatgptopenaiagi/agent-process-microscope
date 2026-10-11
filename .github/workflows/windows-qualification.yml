@@ -73,7 +73,7 @@
         },
         {
           "name": "Standard tests with resource observations",
-          "run": ".venv/Scripts/python.exe scripts/ci_checks.py --destination cache/ci-tests"
+          "run": ".venv/Scripts/python.exe scripts/ci_checks.py --destination cache/ci-tests --expected-tests 172"
         },
         {
           "name": "Repeat GUI lifecycle and adjacent rejection paths",

@@ -73,6 +73,13 @@ Original finalizers run; stderr is retained. CI rejects known unraisable/Tcl
 shutdown diagnostics even with exit code zero. Standard and compatibility outcomes
 remain separate. Fixtures contain only synthetic data.
 
+Recovery qualification also rejects incomplete logs, zero tests, duplicate test
+summaries, trailing output after the success footer, and skipped-test summaries.
+The repair CI standard job requires exactly 172 completed tests; each focused
+process requires 11. Update these explicit expectations when reviewed tests are
+added. An isolated `OK` line is insufficient. The original lifecycle repair is
+preserved; this additional check changes qualification, not GUI behavior.
+
 Both hosted matrix jobs retain Python 3.12 and 3.14 on `windows-2025`, read-only
 repository permissions and pinned Actions. The repair branch/PR filters include
 the Checkpoint D base. No release or binary upload is added. A local Python 3.14

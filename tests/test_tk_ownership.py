@@ -32,10 +32,20 @@ class TkOwnershipTests(unittest.TestCase):
         self.assertTrue(result['unittest_ok'])
         self.assertEqual(result['test_count'], 2)
         self.assertEqual(result['shutdown_diagnostics'], [])
+        self.assertTrue(inspect_test_log(log, expected_tests=2)['unittest_ok'])
+        self.assertFalse(inspect_test_log(log, expected_tests=3)['unittest_ok'])
+        for incomplete in ('OK\n', 'Ran 2 tests in 0.1s\n',
+                           'Ran 0 tests in 0.1s\n\nOK\n', log + log,
+                           log + 'unexpected termination', log.replace('OK', 'OK (skipped=1)')):
+            self.assertFalse(inspect_test_log(incomplete)['unittest_ok'], incomplete)
+        with self.assertRaises(ValueError):
+            inspect_test_log(log, expected_tests=0)
         for warning in ('RuntimeError: main thread is not in main loop',
                         'Tcl_AsyncDelete: async handler deleted by the wrong thread',
-                        'RuntimeWarning: the Tcl interpreter is leaked'):
+                        'RuntimeWarning: the Tcl interpreter is leaked',
+                        'Exception ignored in: <function Variable.__del__>'):
             self.assertTrue(inspect_test_log(log + warning)['shutdown_diagnostics'])
+            self.assertFalse(inspect_test_log(log + warning)['unittest_ok'])
 
     def test_failed_outcomes_never_transport_exceptions(self):
         def rejected(): raise PermissionError('private payload must not cross')

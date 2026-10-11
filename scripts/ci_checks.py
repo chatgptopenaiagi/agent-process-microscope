@@ -12,19 +12,26 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def inspect_test_log(value):
+def inspect_test_log(value, expected_tests=None):
     """A zero exit code does not excuse unraisable Tcl/Tk shutdown errors."""
     markers = ('main thread is not in main loop', 'Tcl_AsyncDelete',
                'Tcl interpreter is leaked', 'Exception ignored', 'invalid command name')
     diagnostics = [marker for marker in markers if marker in value]
-    count = re.search(r'Ran (\d+) tests? in ([\d.]+)s', value)
+    if expected_tests is not None and (type(expected_tests) is not int or expected_tests < 1):
+        raise ValueError('Expected test count must be a positive integer')
+    counts = list(re.finditer(r'^Ran (\d+) tests? in (\d+(?:\.\d+)?)s\s*$', value, re.MULTILINE))
+    count = counts[0] if len(counts) == 1 else None
+    complete = bool(count and re.fullmatch(r'\s*OK\s*', value[count.end():]))
+    count_matches = bool(count and int(count[1]) > 0 and
+                         (expected_tests is None or int(count[1]) == expected_tests))
     return dict(test_count=int(count[1]) if count else None,
                 unittest_seconds=float(count[2]) if count else None,
                 shutdown_diagnostics=diagnostics,
-                unittest_ok=bool(re.search(r'^OK\s*$', value, re.MULTILINE)))
+                expected_test_count=expected_tests,
+                unittest_ok=complete and count_matches)
 
 
-def run(destination, repeat=1):
+def run(destination, repeat=1, expected_tests=None):
     if not 1 <= repeat <= 5: raise ValueError('Repeat bound is 1..5')
     destination = Path(destination).resolve()
     if not destination.is_relative_to(ROOT / 'cache'): raise ValueError('Use a new project cache destination')
@@ -57,7 +64,7 @@ def run(destination, repeat=1):
                     timed_out = True; p.kill(); break
                 time.sleep(.1)
             code = p.wait(timeout=10)
-        diagnostics = inspect_test_log((destination / ('standard-' + str(n + 1) + '.txt')).read_text(encoding='utf-8', errors='replace'))
+        diagnostics = inspect_test_log((destination / ('standard-' + str(n + 1) + '.txt')).read_text(encoding='utf-8', errors='replace'), expected_tests)
         results.append(dict(run=n + 1, exit_code=code, timeout=timed_out, **diagnostics,
                             seconds=round(time.monotonic() - start, 3), peak_owned_tree_rss_sampled_bytes=peak,
                             resource_unavailable_samples=unavailable))
@@ -81,7 +88,8 @@ if __name__ == '__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--destination', type=Path, required=True)
     parser.add_argument('--repeat', type=int, default=1)
+    parser.add_argument('--expected-tests', type=int)
     args=parser.parse_args()
-    report=run(args.destination,args.repeat)
+    report=run(args.destination,args.repeat,args.expected_tests)
     print(json.dumps(report,indent=2))
     raise SystemExit(0 if report['status']=='PASS' else 1)

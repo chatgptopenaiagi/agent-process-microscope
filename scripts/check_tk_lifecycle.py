@@ -41,7 +41,7 @@ def run(destination, repeat=3):
             except subprocess.TimeoutExpired:
                 timed_out = True
                 process.kill(); code = process.wait(timeout=10)
-        data = inspect_test_log((destination / f'lifecycle-{number + 1}.txt').read_text(encoding='utf-8', errors='replace'))
+        data = inspect_test_log((destination / f'lifecycle-{number + 1}.txt').read_text(encoding='utf-8', errors='replace'), expected_tests=11)
         runs.append(dict(run=number + 1, order=order, exit_code=code, timeout=timed_out,
                          seconds=round(time.monotonic()-start, 3), **data))
     passed = all(r['exit_code'] == 0 and not r['timeout'] and r['unittest_ok'] and not r['shutdown_diagnostics'] for r in runs)

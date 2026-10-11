@@ -1,0 +1,156 @@
+{
+  "name": "Windows qualification",
+  "on": {
+    "pull_request": {
+      "branches": [
+        "main",
+        "feature/living-observatory-v1",
+        "feature/apm-cognitive-holmes-v1",
+        "feature/apm-human-ready-desktop-v1",
+        "feature/apm-independent-qualification-v1"
+      ]
+    },
+    "push": {
+      "branches": [
+        "feature/apm-continuous-qualification-v1"
+      ]
+    },
+    "workflow_dispatch": {}
+  },
+  "permissions": {
+    "contents": "read"
+  },
+  "concurrency": {
+    "group": "apm-${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}",
+    "cancel-in-progress": true
+  },
+  "defaults": {
+    "run": {
+      "shell": "pwsh"
+    }
+  },
+  "env": {
+    "PYTHONUTF8": "1",
+    "PYTHONNOUSERSITE": "1"
+  },
+  "jobs": {
+    "source": {
+      "runs-on": "windows-2025",
+      "timeout-minutes": 20,
+      "strategy": {
+        "fail-fast": false,
+        "matrix": {
+          "python": [
+            "3.12",
+            "3.14"
+          ]
+        }
+      },
+      "steps": [
+        {
+          "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "with": {
+            "persist-credentials": false,
+            "ref": "${{ github.event.pull_request.head.sha || github.sha }}"
+          }
+        },
+        {
+          "uses": "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97",
+          "with": {
+            "python-version": "${{ matrix.python }}",
+            "architecture": "x64"
+          }
+        },
+        {
+          "name": "Create isolated runtime",
+          "run": "python -m venv .venv\n.venv/Scripts/python.exe -m pip --isolated install --disable-pip-version-check --no-input psutil==7.2.2\nif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }"
+        },
+        {
+          "name": "Validate capability contract",
+          "run": ".venv/Scripts/python.exe scripts/verify_capabilities.py"
+        },
+        {
+          "name": "Standard tests with resource observations",
+          "run": ".venv/Scripts/python.exe scripts/ci_checks.py --destination cache/ci-tests"
+        },
+        {
+          "name": "Select safe diagnostics",
+          "if": "always()",
+          "run": ".venv/Scripts/python.exe scripts/ci_artifacts.py"
+        },
+        {
+          "name": "Retain bounded synthetic diagnostics",
+          "if": "always()",
+          "uses": "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+          "with": {
+            "name": "diagnostics-${{ github.job }}-${{ matrix.python || 'build' }}",
+            "path": "cache/ci-public/",
+            "retention-days": 7,
+            "if-no-files-found": "warn"
+          }
+        }
+      ]
+    },
+    "package": {
+      "runs-on": "windows-2025",
+      "timeout-minutes": 25,
+      "needs": "source",
+      "steps": [
+        {
+          "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "with": {
+            "persist-credentials": false,
+            "ref": "${{ github.event.pull_request.head.sha || github.sha }}"
+          }
+        },
+        {
+          "uses": "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97",
+          "with": {
+            "python-version": "3.14",
+            "architecture": "x64"
+          }
+        },
+        {
+          "name": "Create isolated pinned build environment",
+          "run": "python -m venv .venv\n.venv/Scripts/python.exe -m pip --isolated install --disable-pip-version-check --no-input -r packaging/build-requirements.txt\nif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }"
+        },
+        {
+          "name": "Record fresh runner inputs (not previously authenticated)",
+          "run": "New-Item -ItemType Directory -Path cache -Force | Out-Null\n.venv/Scripts/python.exe scripts/build_provenance.py --requirements packaging/build-requirements.txt --write-new-lock cache/ci-toolchain.json"
+        },
+        {
+          "name": "Build Windows development artifacts",
+          "run": ".venv/Scripts/python.exe scripts/build_windows.py --destination cache/ci-build --toolchain-lock cache/ci-toolchain.json"
+        },
+        {
+          "name": "Qualify portable archive",
+          "run": "$archive = 'cache/ci-build/APM-0.2.0.dev1-windows-x64-portable.zip'\n$digest = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()\n.venv/Scripts/python.exe scripts/qualify_portable.py $archive --sha256 $digest --manifest cache/ci-build/artifact-manifest.json --destination cache/ci-package --execute-reviewed-build"
+        },
+        {
+          "name": "Install and qualify wheel",
+          "run": ".venv/Scripts/python.exe scripts/check_wheel.py --wheel cache/ci-build/wheel/agent_process_microscope-0.2.0.dev1-py3-none-any.whl --destination cache/ci-wheel"
+        },
+        {
+          "name": "Inventory components and unresolved licenses",
+          "run": ".venv/Scripts/python.exe scripts/component_inventory.py --manifest cache/ci-build/artifact-manifest.json --output cache/ci-components.json"
+        },
+        {
+          "name": "Select safe diagnostics",
+          "if": "always()",
+          "run": ".venv/Scripts/python.exe scripts/ci_artifacts.py"
+        },
+        {
+          "name": "Retain bounded synthetic diagnostics",
+          "if": "always()",
+          "uses": "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+          "with": {
+            "name": "diagnostics-package",
+            "path": "cache/ci-public/",
+            "retention-days": 7,
+            "if-no-files-found": "warn"
+          }
+        }
+      ]
+    }
+  }
+}

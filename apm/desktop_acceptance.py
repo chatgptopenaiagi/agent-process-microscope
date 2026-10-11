@@ -28,7 +28,7 @@ def run(destination):
             root.update(); time.sleep(.01)
         root.update()
         require(not window.busy, 'GUI operation timed out')
-        require('rejected' not in window.status.get(), 'GUI rejected fixture operation')
+        require(window.operation_status == 'PASS', 'GUI fixture operation failed: ' + str(window.operation_error))
     def digest(path): return hashlib.sha256(path.read_bytes()).hexdigest()
     try:
         require(not window.data_root.exists(), 'Startup wrote user data')
@@ -57,7 +57,7 @@ def run(destination):
         window.reason.delete(0, 'end'); window.reason.insert(0, 'Correction: contrary outcomes leave the cause unknown.')
         window.review_state.set('INSUFFICIENT_EVIDENCE'); window.review(True); wait()
         window.close()
-        # A new interpreter/widget tree and a newly opened journal exercise reopening.
+        # A new Tcl interpreter/widget tree; OS-process restart is checked by the portable harness.
         root = tk.Tk(); root.withdraw()
         window = HolmesWindow(root, data_root=directory / 'data', producer_class='SYNTHETIC')
         window.open_journal(case_path); wait()

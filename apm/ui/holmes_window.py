@@ -20,6 +20,7 @@ class HolmesWindow:
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='APM-Holmes')
         self.future = None
         self.callback = None
+        self.operation_status, self.operation_error = 'IDLE', None
         self.closed, self.busy, self.closing = False, False, False
         self.path = None
         self.case_id = str(uuid4())
@@ -273,21 +274,22 @@ class HolmesWindow:
         if self.busy or self.closed or self.closing:
             self.status.set('Please wait for the current bounded operation to finish.'); return
         self.busy = True; self.status.set('Working locally…')
+        self.operation_status, self.operation_error = 'RUNNING', None
         self.callback = callback
         self.future = self.executor.submit(operation)
 
-    def poll(self):
-        if self.closed:
-            return
+    def finish_operation(self):
         if self.future is not None and self.future.done():
             future, self.future = self.future, None
             callback, self.callback = self.callback, None
             self.busy = False
             try:
                 result = future.result()
+                self.operation_status = 'PASS'
                 self.status.set('Ready. Source evidence unchanged; no execution authority.')
                 if not self.closing: callback(result)
             except Exception as exc:
+                self.operation_status, self.operation_error = 'FAIL', type(exc).__name__
                 # Do not display exception text potentially containing a private path or input.
                 if isinstance(exc, FileExistsError):
                     self.status.set('Choose a new destination. The existing file was preserved.')
@@ -295,6 +297,11 @@ class HolmesWindow:
                     self.status.set('This location is not accessible. Choose a folder you can write to; existing evidence was preserved.')
                 else:
                     self.status.set('Operation rejected or unavailable. Check citations, field limits, review selection and destination. Sources unchanged.')
+
+    def poll(self):
+        if self.closed:
+            return
+        self.finish_operation()
         self.timer = self.root.after(30, self.poll)
 
     def choose_new(self):
@@ -542,6 +549,7 @@ class HolmesWindow:
             self.status.set('Finishing the current local operation before closing. Source evidence remains unchanged.')
             self.root.after(50, self.close)
             return
+        self.finish_operation()
         self.closed = True
         self.callback = None
         for microscope in self.microscopes:

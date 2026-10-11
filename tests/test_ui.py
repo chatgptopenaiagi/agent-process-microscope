@@ -1,6 +1,6 @@
 from collections import deque
 from pathlib import Path
-import tempfile
+from fixture_support import SyntheticDirectory
 import time
 import tkinter as tk
 import unittest
@@ -81,7 +81,7 @@ class FakeController:
 
 class WindowTests(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parent)
+        self.temporary = SyntheticDirectory(dir=Path(__file__).resolve().parent)
         self.addCleanup(self.temporary.cleanup)
         try:
             self.root = tk.Tk()

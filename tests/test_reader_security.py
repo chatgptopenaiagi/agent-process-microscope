@@ -1,7 +1,7 @@
 """Hostile replay input and interrupted-storage regressions; synthetic evidence only."""
 import json
 from pathlib import Path
-import tempfile
+from fixture_support import SyntheticDirectory
 import unittest
 from unittest.mock import patch
 from uuid import uuid4
@@ -15,7 +15,7 @@ class ReaderSecurityTests(unittest.TestCase):
     def setUp(self):
         cache = Path(__file__).resolve().parents[1] / "cache"
         cache.mkdir(exist_ok=True)
-        self.temp = tempfile.TemporaryDirectory(dir=cache)
+        self.temp = SyntheticDirectory(dir=cache)
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.session_id = str(uuid4())

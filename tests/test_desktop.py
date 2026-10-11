@@ -3,7 +3,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import tempfile
+from fixture_support import SyntheticDirectory
 import time
 import tkinter as tk
 import unittest
@@ -18,7 +18,7 @@ from apm.ui.holmes_window import HolmesWindow
 
 class DesktopTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory()
+        self.temp = SyntheticDirectory()
         self.directory = Path(self.temp.name)
         self.root = tk.Tk(); self.root.withdraw()
         self.window = HolmesWindow(self.root, data_root=self.directory / 'user-data', producer_class='SYNTHETIC')

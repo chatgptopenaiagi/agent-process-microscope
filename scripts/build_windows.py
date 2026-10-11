@@ -21,13 +21,15 @@ def digest(path): return hashlib.sha256(path.read_bytes()).hexdigest()
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--destination', type=Path, required=True)
+    parser.add_argument('--toolchain-lock', type=Path, default=ROOT / 'packaging/toolchain-lock.json',
+                        help='Explicit reviewed or freshly observed CI lock; not upstream authentication')
     parser.add_argument('--source-date-epoch', type=int, default=1791676800, help='Fixed build timestamp, recorded in the manifest')
     parser.add_argument('--restricted-temp-compat', action='store_true', help='Explicit build-only inherited-permission temp accommodation; does not change global ACLs')
     args = parser.parse_args()
     destination = args.destination.resolve()
     if sys.platform != 'win32' or platform.machine() != 'AMD64': raise RuntimeError('Windows x64 build required')
     if not destination.is_relative_to(ROOT / 'cache') or destination.exists(): raise ValueError('Choose a NEW project cache directory')
-    locked = verify_lock(ROOT / 'packaging/build-requirements.txt', ROOT / 'packaging/toolchain-lock.json')
+    locked = verify_lock(ROOT / 'packaging/build-requirements.txt', args.toolchain_lock)
     expected = {}
     for line in (ROOT / 'packaging/build-requirements.txt').read_text().splitlines():
         if line.strip() and not line.startswith('#'):
@@ -107,6 +109,7 @@ def main():
     (destination / 'artifact-manifest.json').write_text(json.dumps(dict(source=inventory, bundle=files,
         build_dependencies=expected, restricted_temp_compat=args.restricted_temp_compat,
         python=sys.version, platform=platform.platform(), source_date_epoch=args.source_date_epoch,
+        actual_toolchain_lock_sha256=digest(args.toolchain_lock),
         toolchain=locked, reproducibility='Fixed inputs and ZIP metadata; bitwise result must be independently compared'), indent=2))
     archive = destination / 'APM-0.2.0.dev1-windows-x64-portable.zip'
     deterministic_zip(bundle, archive, args.source_date_epoch)

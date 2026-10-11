@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from queue import Queue
-import tempfile
+from fixture_support import SyntheticDirectory
 import unittest
 from uuid import uuid4
 
@@ -78,7 +78,7 @@ class CoreTests(unittest.TestCase):
             self.assertIsNone(test_runner({'command': command}))
 
     def test_session_roundtrip_and_interrupted_tail(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with SyntheticDirectory() as tmp:
             path = Path(tmp) / 'session'
             recorder = Recorder(path, {'schema_version': '1.0', 'session_id': self.session, 'status': 'recording'})
             event = self.event(metadata={'token': 'must-not-persist'})
@@ -95,7 +95,7 @@ class CoreTests(unittest.TestCase):
             self.assertNotIn('must-not-persist', (path / 'events.jsonl').read_text())
 
     def test_midstream_corruption_is_not_silently_skipped(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with SyntheticDirectory() as tmp:
             path = Path(tmp) / 'session'
             recorder = Recorder(path, {'schema_version': '1.0', 'session_id': self.session})
             recorder.record(self.event())

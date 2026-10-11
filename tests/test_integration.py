@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-import tempfile
+from fixture_support import SyntheticDirectory
 import time
 import unittest
 from unittest.mock import patch
@@ -14,7 +14,7 @@ from apm.storage.reader import read_session
 
 class IntegrationTests(unittest.TestCase):
     def test_live_attach_records_changes_and_stop_does_not_kill_specimen(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with SyntheticDirectory() as tmp:
             root = Path(tmp)
             workspace = root / 'workspace'
             workspace.mkdir()
@@ -67,12 +67,21 @@ class IntegrationTests(unittest.TestCase):
                 specimen.wait(timeout=5)
 
     def test_demo_is_durable_and_every_action_explicitly_synthetic(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with SyntheticDirectory() as tmp:
             controller = Controller(Path(tmp), Path(tmp) / 'sessions', demo=True)
             controller.start()
-            time.sleep(.9)
-            controller.stop()
-            self.assertTrue(controller.wait(5))
+            try:
+                seen = []
+                deadline = time.monotonic() + 10
+                while time.monotonic() < deadline:
+                    seen.extend(controller.drain())
+                    if len(seen) > 2: break
+                    self.assertNotEqual(controller.status, 'error', controller.error)
+                    time.sleep(.02)
+                self.assertGreater(len(seen), 2, 'Synthetic activity did not arrive within the bound')
+            finally:
+                controller.stop()
+                self.assertTrue(controller.wait(5))
             _, events, _ = read_session(controller.session_path)
             self.assertGreater(len(events), 2)
             self.assertTrue(all(e.status == 'synthetic' and e.interpretation_level == 'synthetic' for e in events))

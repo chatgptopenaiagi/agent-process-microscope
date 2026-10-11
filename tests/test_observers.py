@@ -8,7 +8,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-import tempfile
+from fixture_support import SyntheticDirectory
 import time
 from types import SimpleNamespace
 import unittest
@@ -27,7 +27,7 @@ APM_ROOT = Path(__file__).resolve().parents[1]
 
 class ScopedTemporaryTest(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix=".observer-test-", dir=APM_ROOT)
+        self.temporary = SyntheticDirectory(prefix=".observer-test-", dir=APM_ROOT)
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
 

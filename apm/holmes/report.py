@@ -3,6 +3,7 @@ from html import escape
 import json
 import os
 from pathlib import Path
+from uuid import uuid4
 
 from apm.core.events import utc_now
 from apm import __version__
@@ -127,6 +128,16 @@ def export_report(journal, catalog, case_id, destination):
     report = case_report(journal, catalog, case_id)
     data = (render_html(report) if destination.suffix.lower() == '.html' else json.dumps(report, ensure_ascii=True, indent=2)).encode('utf-8')
     check(len(data) <= 32 * 1024 * 1024, 'report_size')
-    with destination.open('xb') as target:
+    if os.path.lexists(destination):
+        raise FileExistsError('report_destination_exists')
+    partial = destination.with_name('.apm-report-' + str(uuid4()) + '.partial')
+    with partial.open('xb') as target:
         target.write(data); target.flush(); os.fsync(target.fileno())
+    # Publish only after a complete flushed write. Neither branch overwrites an
+    # existing destination. Interrupted partials remain available for inspection.
+    if os.name == 'nt':
+        os.rename(partial, destination)
+    else:
+        os.link(partial, destination)
+        partial.unlink()
     return dict(bytes=len(data), hypotheses=len(report['hypotheses']), revisions=len(report['history']), citations=len(report['citations']))

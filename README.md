@@ -5,7 +5,15 @@
 Agent Process Microscope (APM) is an experimental Windows-first observability
 system for evidence-backed, human-readable inspection and replay of AI-agent activity.
 
-**Status: Experimental Genesis Implementation — 0.1.0**
+**Status: Experimental Holmes Lab desktop — 0.2.0.dev1**
+
+The default application now opens a local-first investigation welcome screen.
+Try a clearly synthetic demonstration, select evidence, build an explanation,
+challenge it, preserve your assessment and export a readable report. Nothing is
+observed automatically. Start with the [desktop guide](docs/DESKTOP_GUIDE.md).
+The original microscope, observation controls and replay remain under Advanced
+tools and the existing CLI commands. Packaged development builds and their
+unverified release gates are tracked in [Distribution](docs/DISTRIBUTION.md).
 
 **Observatory development extension:** new observations also enter local SQLite
 memory. **Memory / Ask…** opens searchable session history, a live arrival view,

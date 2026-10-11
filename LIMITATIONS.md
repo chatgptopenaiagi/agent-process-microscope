@@ -34,9 +34,12 @@ application lifecycle qualification remain unverified. See [Holmes scope](docs/H
 - Sessions are local, plaintext and bounded; redaction cannot guarantee removal
   of arbitrary secrets. The evidence digest does not provide tamper resistance.
 - The live view retains 2,000 recent events; the recording may contain more.
-- No standalone frozen EXE or signed installer is delivered in Genesis. The
-  windowed Python launcher uses the project virtual environment; machine-specific
-  shortcuts are not included in the source repository.
+- Genesis originally shipped from source. Holmes 0.2.0.dev1 now has local frozen
+  development executables and a wheel with automated current-host checks. Clean
+  Windows installation, visible human acceptance, signing, complete transitive
+  binary redistribution review and installer lifecycle remain unverified. No
+  release, MSI or public binary download is claimed. Machine-specific shortcuts
+  and all build outputs remain outside source control.
 - At the historical Genesis baseline no live paid Codex invocation was needed or performed. Official stream
   parsing is tested with synthetic protocol records; real process attachment is
   tested against an owned local fixture without reading existing private sessions.

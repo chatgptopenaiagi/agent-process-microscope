@@ -13,13 +13,17 @@ from apm.core.state import StateEngine
 from apm.storage.reader import read_session
 from apm.storage.recorder import Recorder
 
-DEFAULT_SESSIONS = Path(__file__).resolve().parent.parent / 'sessions'
+from apm.paths import sessions_root
+DEFAULT_SESSIONS = sessions_root()
 
 
 def parser():
     result = argparse.ArgumentParser(prog='apm', description='Agent Process Microscope — external evidence, never private reasoning')
     result.add_argument('--demo', action='store_true', help='Open the GUI with a clearly synthetic session')
+    result.add_argument('--data-dir', type=Path, help='Desktop case and demonstration location; no files are created until requested')
     commands = result.add_subparsers(dest='command')
+    check = commands.add_parser('desktop-check', help='Run explicit synthetic native-widget acceptance in a NEW directory; not visual approval')
+    check.add_argument('destination', type=Path)
     start = commands.add_parser('start', help='Attach to a selected PID; stopping observation never kills it')
     start.add_argument('--workspace', type=Path, default=Path.cwd())
     start.add_argument('--pid', type=int, help='Existing root process PID (required outside demo mode)')
@@ -80,6 +84,10 @@ def import_codex(path, sessions):
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
+        if args.command == 'desktop-check':
+            from apm.desktop_acceptance import run
+            print(json.dumps(run(args.destination), indent=2))
+            return 0
         from apm.holmes.cli import run_command as run_holmes_command
         handled = run_holmes_command(args)
         if handled is not None:
@@ -126,6 +134,9 @@ def main(argv=None):
                 print(controller.error, file=sys.stderr)
                 return 1
             return 0
+        if args.command is None and not args.demo:
+            from apm.ui.holmes_window import run_desktop
+            return run_desktop(data_root=args.data_dir)
         from apm.ui.main_window import run_gui
         run_gui(workspace=getattr(args, 'workspace', None), sessions_root=getattr(args, 'sessions', DEFAULT_SESSIONS),
                 pid=getattr(args, 'pid', None), demo=args.demo)

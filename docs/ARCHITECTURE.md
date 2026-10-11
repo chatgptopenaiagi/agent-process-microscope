@@ -119,3 +119,19 @@ with alternatives/limitations, and `report` exports new minimized HTML/JSON file
 execution. `apm.ui.holmes_window` gives these journal operations a single-worker
 native workflow. See [operations and bounds](HOLMES.md) and
 [journal decision](decisions/0002-holmes-journal.md).
+
+## Guided desktop and portable application boundary
+
+The default desktop is `apm.ui.holmes_window.run_desktop`. Its welcome page performs
+no collection, external connection or data write. An explicit demonstration uses
+`apm.desktop_demo` to create a new synthetic fixture and empty journal. The guided
+pages call existing journal/catalog operations on one worker; Tk callbacks remain
+on the main thread and completed callbacks are released to avoid retaining old Tk
+interpreters across reopened cases. `apm.paths` separates installed per-user data
+from program files while preserving explicit paths and source observation defaults.
+
+`apm.desktop_acceptance` is an explicit, bounded synthetic qualification command,
+never a startup action. The allowlist Windows build produces GUI/console entry
+points from one analysis and a developer wheel. Neither includes evidence files,
+Codex or credentials. See [ADR 0003](decisions/0003-desktop-distribution.md),
+[human workflow](DESKTOP_GUIDE.md) and [distribution gates](DISTRIBUTION.md).

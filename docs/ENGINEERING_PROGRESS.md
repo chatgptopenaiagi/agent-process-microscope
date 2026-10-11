@@ -1,5 +1,51 @@
 # Living Observatory engineering checkpoint
 
+## Latest: unattended desktop engineering checkpoint, 2026-10-10
+
+Checkpoint A is preserved locally at `1f43147758c4ba88ac4af8b32ce42f49b25e3995`
+on `feature/apm-cognitive-holmes-v1`, based on PR #1 head `ab019da`. Its 118-file
+reviewed tree contains 44 changes and passes 130 compatibility tests. GitHub
+publication was blocked by mandatory tool approval under policy `never`; no new
+remote branch/PR was created. The verified bundle, full manifest, staged diff and
+ready-to-run stacked publication handoff are retained locally. PR #1 is unchanged.
+
+The subsequent desktop implementation adds a useful welcome state, synthetic
+onboarding, guided native investigation pages, keyboard navigation, per-user data
+defaults and readable evidence-cited reports. Current capsule and journal formats,
+Genesis observation, replay and qualification review remain compatible. Completed
+worker callbacks are released and close waits for an active operation.
+
+Final compatibility suite: **135 passed in 88.315 s**. Final standard suite:
+**135 run in 79.271 s, 3 failures and 102 error entries**. The new desktop fixture
+postconditions/cleanup also encounter the known restricted temporary-directory
+problem; the standalone no-APM diagnostic reproduces it. Owner PowerShell is
+**PENDING OWNER EXECUTION**, not assumed successful. Historical failing/intermediate
+logs remain preserved, including a separate Tk retention issue fixed before the
+passing compatibility run. No global ACL or Python configuration was changed.
+
+The retained owner qualification still has 108 verified records and 21 resolved
+citations, with unchanged DB/WAL and protected executable hash. No Codex workload
+was repeated. Source and both packaged executables passed fresh-process synthetic
+Holmes workflows; the parent independently recomputed packaged journal chains.
+The wheel installed in a disposable environment and passed the same workflow.
+Build/install used an explicit, local restricted-temp accommodation after the
+unmodified wheel backend failed. Portable executables and wheel remain private
+development artifacts with hashes and inventories, not published downloads.
+
+Visible human acceptance, clean Windows installation, full transitive binary
+redistribution clearance, signing, installer upgrade/uninstall and lifecycle data
+retention remain UNVERIFIED. WiX 7 installer work is blocked pending owner EULA/
+maintenance applicability decision. Checkpoint B is a local source preservation
+handoff stacked on A; the same publication approval block remains in force.
+See [checkpoint details](DESKTOP_CHECKPOINTS.md), [desktop guide](DESKTOP_GUIDE.md),
+[distribution gates](DISTRIBUTION.md) and [ADR 0003](decisions/0003-desktop-distribution.md).
+
+The precise next task is clean ordinary-user Windows x64 qualification of the
+portable build, without Python, using the visible demonstration and retained-case
+checklist. The historical development results follow without replacing old evidence.
+
+## Earlier engineering milestones
+
 This development checkpoint extends Genesis at commit
 `717aaa50c592d92e7369711567374c5c801f7f2b`. It preserves the Python/Tk architecture,
 existing JSONL recordings and passive observers. psutil remains the only runtime

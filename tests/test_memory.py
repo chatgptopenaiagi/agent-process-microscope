@@ -288,7 +288,13 @@ class MemoryGuiTests(MemoryCase):
         self.memory.append(event, self.stream, 1)
         root = tk.Tk(); root.withdraw()
         window = MemoryWindow(root, self.path)
-        self.addCleanup(window.close)
+        def close():
+            window.close()
+            deadline = time.monotonic() + 5
+            while not window.closed and time.monotonic() < deadline:
+                root.update(); time.sleep(.01)
+            self.assertTrue(window.closed)
+        self.addCleanup(close)
         def pump():
             deadline = time.monotonic()+5
             while window.busy and time.monotonic() < deadline:

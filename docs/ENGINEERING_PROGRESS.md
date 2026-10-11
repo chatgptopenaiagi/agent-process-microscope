@@ -582,3 +582,14 @@ with explicit review provenance and false-match results. This closes the main
 remaining usability gap in the tested interpretation-to-pattern loop. Owner-visible
 Holmes acceptance remains a separate pending qualification, not a claim this tool
 session can make. [User/API guide](HOLMES.md).
+
+
+## Mission 006.6: isolated Tk ownership repair
+
+The failed-Future traceback cycle was reproduced on Checkpoint D, including
+worker-thread finalization of eight Tk variables. The repair keeps outcomes free
+of tracebacks, retains callbacks on the GUI owner, waits for child/query shutdown,
+and removes variable traces before Tk destruction. Existing evidence, Checkpoint D
+and Mission 007 history remain separate. See [mechanism, tests and acceptance gates](TKINTER_THREAD_OWNERSHIP.md).
+Hosted Python 3.12 and 3.14 acceptance must be recorded for the exact repair commit;
+a local pass is insufficient. No binary release is authorized by this checkpoint.

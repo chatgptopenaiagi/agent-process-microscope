@@ -3,7 +3,9 @@ from pathlib import Path
 import shutil
 
 ROOT=Path(__file__).resolve().parents[1]
-ALLOW=['cache/ci-tests/summary.json','cache/ci-tests/standard-1.txt',
+ALLOW=['cache/ci-lifecycle/lifecycle-summary.json',
+       'cache/ci-lifecycle/lifecycle-1.txt','cache/ci-lifecycle/lifecycle-2.txt','cache/ci-lifecycle/lifecycle-3.txt',
+       'cache/ci-tests/summary.json','cache/ci-tests/standard-1.txt',
        'cache/ci-package/qualification.json','cache/ci-package/qualification.txt',
        'cache/ci-components.json','cache/ci-build/freezer.txt','cache/ci-build/wheel.txt']
 

@@ -10,11 +10,17 @@ from tkinter import ttk
 from apm.storage.memory import Memory, explanation
 
 
+from apm.ui.ownership import owner_thread_only
+
+
+@owner_thread_only
 class MemoryWindow:
     def __init__(self, root, path):
         self.root, self.path = root, path
         self.busy, self.closed, self.cursor = False, False, 0
         self.results = queue.Queue(maxsize=1)
+        self.worker = self.callback = self.close_timer = None
+        self.closing = False
         self.records = {}
         root.title('APM — Memory and investigation')
         root.geometry('1100x750')
@@ -53,17 +59,20 @@ class MemoryWindow:
         self.refresh_sessions()
 
     def work(self, operation, callback, *, write=False):
-        if self.busy or self.closed:
+        if self.busy or self.closed or self.closing:
             return
         self.busy = True
+        self.callback = callback
+        path, results = self.path, self.results
         def run():
             try:
-                with Memory(self.path, readonly=not write) as memory:
+                with Memory(path, readonly=not write) as memory:
                     value = operation(memory)
-                self.results.put((callback, value, None))
+                results.put_nowait((value, None))
             except Exception:
-                self.results.put((callback, None, 'Memory unavailable; check the selected database, session and storage limits.'))
-        threading.Thread(target=run, name='APM memory query', daemon=True).start()
+                results.put_nowait((None, 'Memory unavailable; check the selected database, session and storage limits.'))
+        self.worker = threading.Thread(target=run, name='APM memory query', daemon=True)
+        self.worker.start()
 
     def refresh_sessions(self):
         def show(rows):
@@ -119,10 +128,11 @@ class MemoryWindow:
                       lambda _: (self.note_text.set(''), self.status.set('Opinion recorded; no action authorized or executed.')), write=True)
 
     def tick(self):
-        if self.closed:
+        if self.closed or self.closing:
             return
         try:
-            callback, value, error = self.results.get_nowait()
+            value, error = self.results.get_nowait()
+            callback, self.callback = self.callback, None
             self.busy = False
             if error:
                 self.status.set(error)
@@ -134,7 +144,27 @@ class MemoryWindow:
             self.load_events()
         self.timer = self.root.after(500, self.tick)
 
+    def finish_close(self):
+        self.close_timer = None
+        self.close()
+
     def close(self):
-        self.closed = True
+        if self.closed:
+            return
+        self.closing = True
         self.root.after_cancel(self.timer)
+        if self.worker is not None and self.worker.is_alive():
+            self.status.set('Finishing the local operation before closing…')
+            if self.close_timer is None:
+                self.close_timer = self.root.after(25, self.finish_close)
+            return
+        if self.worker is not None:
+            self.worker.join()
+        if self.close_timer is not None:
+            self.root.after_cancel(self.close_timer)
+            self.close_timer = None
+        self.callback = None
+        while not self.results.empty():
+            self.results.get_nowait()
+        self.closed = True
         self.root.destroy()

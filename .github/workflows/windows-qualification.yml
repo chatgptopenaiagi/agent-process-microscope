@@ -7,12 +7,14 @@
         "feature/living-observatory-v1",
         "feature/apm-cognitive-holmes-v1",
         "feature/apm-human-ready-desktop-v1",
-        "feature/apm-independent-qualification-v1"
+        "feature/apm-independent-qualification-v1",
+        "feature/apm-continuous-qualification-v1"
       ]
     },
     "push": {
       "branches": [
-        "feature/apm-continuous-qualification-v1"
+        "feature/apm-continuous-qualification-v1",
+        "fix/apm-tkinter-thread-ownership-v1"
       ]
     },
     "workflow_dispatch": {}
@@ -72,6 +74,10 @@
         {
           "name": "Standard tests with resource observations",
           "run": ".venv/Scripts/python.exe scripts/ci_checks.py --destination cache/ci-tests"
+        },
+        {
+          "name": "Repeat GUI lifecycle and adjacent rejection paths",
+          "run": ".venv/Scripts/python.exe scripts/check_tk_lifecycle.py --destination cache/ci-lifecycle --repeat 3"
         },
         {
           "name": "Select safe diagnostics",

@@ -11,6 +11,10 @@ from apm.holmes.model import Catalog, STATES, text
 from apm.holmes.report import export_report, readable_challenge
 
 
+from apm.ui.ownership import owner_thread_only, require_gui_thread, run_operation
+
+
+@owner_thread_only
 class HolmesWindow:
     def __init__(self, root, *, producer_class='HUMAN_RECORDED', data_root=None):
         from apm.paths import user_data_root
@@ -19,6 +23,7 @@ class HolmesWindow:
         self.producer_class = producer_class
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='APM-Holmes')
         self.future = None
+        self.close_timer = None
         self.callback = None
         self.operation_status, self.operation_error = 'IDLE', None
         self.closed, self.busy, self.closing = False, False, False
@@ -208,8 +213,7 @@ class HolmesWindow:
         # Independent Tk root isolates the legacy microscope's global theme settings.
         from apm.ui.main_window import APMWindow
         child = tk.Tk()
-        child.apm = APMWindow(child, sessions_root=self.data_root / 'sessions')
-        self.microscopes.append(child.apm)
+        self.microscopes.append(APMWindow(child, sessions_root=self.data_root / 'sessions'))
         self.banner.set('Advanced microscope opened • Observation controls are in that window • No model providers')
 
     def open_library(self):
@@ -220,7 +224,7 @@ class HolmesWindow:
         if not path: return
         def done(capsule):
             child = tk.Toplevel(self.root)
-            child.apm = CapsuleWindow(child, capsule)
+            CapsuleWindow(child, capsule)
         self.submit(lambda: Capsule.open(path), done)
 
     def select_capsule(self, event=None):
@@ -271,32 +275,40 @@ class HolmesWindow:
         widget.configure(state='normal'); widget.delete('1.0', 'end'); widget.insert('1.0', value); widget.configure(state='disabled')
 
     def submit(self, operation, callback):
-        if self.busy or self.closed or self.closing:
+        if self.closed or self.closing:
+            return
+        if self.busy:
             self.status.set('Please wait for the current bounded operation to finish.'); return
         self.busy = True; self.status.set('Working locally…')
         self.operation_status, self.operation_error = 'RUNNING', None
         self.callback = callback
-        self.future = self.executor.submit(operation)
+        self.future = self.executor.submit(run_operation, operation)
 
     def finish_operation(self):
         if self.future is not None and self.future.done():
             future, self.future = self.future, None
             callback, self.callback = self.callback, None
             self.busy = False
-            try:
-                result = future.result()
-                self.operation_status = 'PASS'
-                self.status.set('Ready. Source evidence unchanged; no execution authority.')
-                if not self.closing: callback(result)
-            except Exception as exc:
-                self.operation_status, self.operation_error = 'FAIL', type(exc).__name__
-                # Do not display exception text potentially containing a private path or input.
-                if isinstance(exc, FileExistsError):
-                    self.status.set('Choose a new destination. The existing file was preserved.')
-                elif isinstance(exc, PermissionError):
-                    self.status.set('This location is not accessible. Choose a folder you can write to; existing evidence was preserved.')
-                else:
-                    self.status.set('Operation rejected or unavailable. Check citations, field limits, review selection and destination. Sources unchanged.')
+            outcome = future.result()  # Worker wrapper returns data; no exception traceback crosses.
+            if outcome.error is not None:
+                self.operation_failed(outcome.error)
+                return
+            self.operation_status = 'PASS'
+            self.status.set('Ready. Source evidence unchanged; no execution authority.')
+            if not self.closing:
+                try:
+                    callback(outcome.value)
+                except Exception as error:
+                    self.operation_failed(type(error).__name__)
+
+    def operation_failed(self, kind):
+        self.operation_status, self.operation_error = 'FAIL', kind
+        if kind == 'FileExistsError':
+            self.status.set('Choose a new destination. The existing file was preserved.')
+        elif kind == 'PermissionError':
+            self.status.set('This location is not accessible. Choose a folder you can write to; existing evidence was preserved.')
+        else:
+            self.status.set('Operation rejected or unavailable. Check citations, field limits, review selection and destination. Sources unchanged.')
 
     def poll(self):
         if self.closed:
@@ -344,7 +356,8 @@ class HolmesWindow:
     def open_capsule(self, path):
         def done(sha):
             self.refresh_capsules(sha); self.load_page(reset=True); self.navigate('evidence')
-        self.submit(lambda: self.catalog.open(path), done)
+        catalog = self.catalog
+        self.submit(lambda: catalog.open(path), done)
 
     def load_page(self, reset=False):
         if reset: self.after, self.page_stack = 0, []
@@ -358,7 +371,8 @@ class HolmesWindow:
                     r['evidence_class'] + ' (declared)', r['category'] + ' ' + r['action'], r['attributes'].get('exit_code', 'UNKNOWN')))
             total = next(s['records'] for s in self.catalog.summaries() if s['sha256'] == sha)
             self.status.set(f"Page {len(self.page_stack) + 1}: {len(page)} records shown, {total} in this package. Internal hashes checked; source identity unverified.")
-        self.submit(lambda: self.catalog.page(sha, after), done)
+        catalog = self.catalog
+        self.submit(lambda: catalog.page(sha, after), done)
 
     def next_page(self):
         if self.busy or not self.page_records: return
@@ -397,14 +411,15 @@ class HolmesWindow:
         def done(record):
             self.put(self.summary, f"Resolved {ref['evidence_id']}\nCapsule {ref['capsule_sha256']}\nSession {ref['session_id']}\n{record['source']} declares {record['category']} / {record['action']} [{record['evidence_class']}].\nExit code: {record['attributes'].get('exit_code', 'UNKNOWN')}\nThis lookup verifies reference resolution, not the truth or relevance of the reported fact.")
             self.put(self.raw, json.dumps(record, indent=2))
-        self.submit(lambda: self.catalog.resolve(ref), done)
+        catalog = self.catalog
+        self.submit(lambda: catalog.resolve(ref), done)
 
     def find_patterns(self):
         if not self.path: return
         from apm.holmes.patterns import retrieve
-        path = self.path
+        path, catalog = self.path, self.catalog
         def work():
-            with Journal(path) as journal: return retrieve(journal, self.catalog)
+            with Journal(path) as journal: return retrieve(journal, catalog)
         def done(result):
             lines = [f"{p['description']}: {p['matched_records']} matches. {p['conclusion']}" for p in result['patterns']]
             self.put(self.summary, '\n\n'.join(lines) or 'No active human-reviewed patterns in this journal. Patterns are never promoted automatically.')
@@ -452,15 +467,17 @@ class HolmesWindow:
         except ValueError:
             self.status.set('Enter a claim, uncertainty and valid bounded fields.'); return
         case_id, request_id = self.case_id, str(uuid4())
-        self.change(lambda j: j.propose(case_id, title, purpose, producer, value, self.catalog,
-                                       request_id=request_id, producer_class=self.producer_class))
+        catalog, producer_class = self.catalog, self.producer_class
+        self.change(lambda j: j.propose(case_id, title, purpose, producer, value, catalog,
+                                       request_id=request_id, producer_class=producer_class))
 
     def update(self, kind, detail):
         if not self.current:
             self.status.set('Select a saved hypothesis first.'); return
         current, producer, request_id = self.current, text(self.producer.get(), 200), str(uuid4())
+        catalog, producer_class = self.catalog, self.producer_class
         self.change(lambda j: j.revise(current['hypothesis_id'], current['revision'], producer, kind, detail,
-                                      self.catalog, request_id=request_id, producer_class=self.producer_class))
+                                      catalog, request_id=request_id, producer_class=producer_class))
 
     def revise(self):
         try: self.update('REVISE', dict(hypothesis=self.draft(), reason=text(self.reason.get())))
@@ -528,9 +545,9 @@ class HolmesWindow:
 
     def export(self, destination):
         if not self.path: return
-        path, case_id = self.path, self.case_id
+        path, case_id, catalog = self.path, self.case_id, self.catalog
         def work():
-            with Journal(path) as journal: return export_report(journal, self.catalog, case_id, destination)
+            with Journal(path) as journal: return export_report(journal, catalog, case_id, destination)
         self.submit(work, lambda result: self.status.set(f"Report written: {result['revisions']} revisions, {result['citations']} cited records. No execution authority."))
 
     def choose_backup(self):
@@ -542,27 +559,38 @@ class HolmesWindow:
             with Journal(path) as journal: return journal.backup(destination)
         self.submit(work, lambda result: self.status.set(f"Backup verified: {result['entries']} entries. Source evidence is separate."))
 
+    def finish_close(self):
+        self.close_timer = None
+        self.close()
+
     def close(self):
         if self.closed: return
         self.closing = True
         if self.future is not None and not self.future.done():
             self.status.set('Finishing the current local operation before closing. Source evidence remains unchanged.')
-            self.root.after(50, self.close)
+            if self.close_timer is None:
+                self.close_timer = self.root.after(50, self.finish_close)
             return
         self.finish_operation()
-        self.closed = True
         self.callback = None
         for microscope in self.microscopes:
-            try:
-                if microscope.root.winfo_exists(): microscope.close()
-            except tk.TclError:
-                pass
+            microscope.close()
+        if any(not microscope.closed for microscope in self.microscopes):
+            if self.close_timer is None:
+                self.close_timer = self.root.after(25, self.finish_close)
+            return
+        self.microscopes.clear()
+        self.closed = True
         self.root.after_cancel(self.timer)
+        if self.close_timer is not None:
+            self.root.after_cancel(self.close_timer)
+            self.close_timer = None
         self.executor.shutdown(wait=True, cancel_futures=True)
         self.root.destroy()
 
 
 def run_desktop(data_root=None):
+    require_gui_thread()
     root = tk.Tk()
     HolmesWindow(root, data_root=data_root)
     root.mainloop()

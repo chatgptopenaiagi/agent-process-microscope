@@ -145,3 +145,12 @@ substituted with compatibility results. Only all three passing at the same
 committed source (or an independently justified difference) supports a three-way
 verification statement. Clean-machine and human visual acceptance are additional
 gates, not consequences of three automated test passes.
+
+
+## Tk lifecycle regression gate
+
+Both source jobs also run `scripts/check_tk_lifecycle.py` in fresh processes with
+reversed adjacent test ordering. Bounded lifecycle logs are included in the
+existing diagnostic allowlist. Standard and focused runners reject known Tcl/Tk
+shutdown diagnostics even if the process returns zero. See
+[Tk ownership repair](TKINTER_THREAD_OWNERSHIP.md) for reproduction and limitations.

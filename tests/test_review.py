@@ -160,6 +160,11 @@ class ReviewTests(unittest.TestCase):
             self.assertEqual(window.offset, 100)
             self.assertIn('207 retained records', window.summary.get('1.0', 'end'))
         finally:
-            window.close(); window.worker.join(3)
+            window.close()
+            deadline = time.monotonic() + 5
+            while not window.closed and time.monotonic() < deadline:
+                root.update(); time.sleep(.01)
+            self.assertTrue(window.closed)
+            window.worker.join(3)
         self.assertFalse(window.worker.is_alive())
         self.assertEqual(before, hashlib.sha256(self.path.read_bytes()).hexdigest())

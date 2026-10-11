@@ -1,5 +1,57 @@
 # Living Observatory engineering checkpoint
 
+## Missions 006 / 006.5: continuous and three-way qualification, 2026-10-11
+
+Read-only GitHub checks now confirm PRs #1–#4 remain open and unmerged with
+the expected stacked heads through Checkpoint C. This supersedes the historical
+remote-publication status in the Mission 005 entry below. Development continues
+in an isolated checkout based on C; the original main worktree is preserved.
+
+Implemented a Windows 3.12/3.14 CI matrix, exact-head checkout, pinned Actions,
+bounded synthetic diagnostics, package qualification and component inventory.
+Repository permissions are read-only. CI does not install Codex or use owner
+evidence, provider credentials, paid APIs or release publication. Hosted execution
+is still pending; an authored workflow is not a successful run.
+
+The unchanged C baseline produced 151 compatibility passes and standard results
+of four failures / 102 error entries. A separate no-APM probe reproduces access
+denial in private temporary directories under the restricted token. Synthetic
+fixtures now inherit project permissions without changing ACLs or production
+storage policy. Git read-only object cleanup is scoped to owned fixtures.
+The demo test waits for actual events and always stops its own controller.
+
+The retained first final runs passed 163 tests in 92.238s and 95.142s.
+Subsequent three-way gate work increased the suite to 164: two development
+standard runs passed in 90.853s and 89.537s, and compatibility passed in 90.714s.
+These are distinct snapshots. Exact committed-source validation and hashes belong
+in the final local handoff; do not reattribute earlier logs to later revisions.
+Owner PowerShell execution and GitHub Windows execution remain PENDING.
+
+Report export now flushes a unique partial before publishing a new final filename.
+Focused recovery tests cover interruption, backup restoration, read-only inspection,
+citations, corruption rejection and unchanged source evidence. Existing capsule
+and journal serialization remains unchanged.
+
+Two fresh local builds have equal portable ZIP and wheel hashes, with all 150
+bundled file inventories equal. Both packaged executables passed synthetic native
+widget workflows and fresh-process reopening; the wheel passed isolated offline
+installation and workflow checks using the declared restricted-build accommodation.
+This is same-machine evidence, not clean Windows or human visual acceptance.
+The component inventory lists nine build/runtime packages and 76 binaries, with
+unresolved binary license mappings and upstream authenticity. It is not a claimed
+CycloneDX SBOM. No new dependency or global installation was introduced.
+
+The owner test script verifies a complete reviewed source manifest and exact
+commit, records ordinary unittest results separately, and never relabels worker
+results as owner results. Release gates preserve all three verification layers.
+Version remains 0.2.0.dev1; clean-machine, human, license and release-authorization
+gates remain pending. See [qualification architecture](CONTINUOUS_QUALIFICATION.md)
+and [clean Windows acceptance](CLEAN_WINDOWS_ACCEPTANCE.md).
+
+Next action: execute the reviewed Checkpoint D owner publication handoff, then
+inspect its first Windows CI run at that exact head. Ordinary owner tests use the
+separate manifest-bound script. Neither task authorizes merging or a binary release.
+
 ## Mission 005: independent qualification, 2026-10-11
 
 The immutable cognitive and desktop checkpoints were reconstructed and their

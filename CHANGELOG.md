@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased — continuous qualification, 2026-10-11
+
+- Add least-privilege Windows CI for Python 3.12/3.14, development packaging and
+  bounded synthetic diagnostics. Hosted execution remains pending.
+- Replace private temporary-directory test fixtures with explicitly owned,
+  project-local synthetic directories. Standard unittest passes in the restricted
+  worker; owner-shell and hosted-runner results remain separate.
+- Publish reports only after a complete flushed write; preserve interrupted
+  partials and test backup restoration, citations and source preservation.
+- Add dependency inventory, release-gate validation and clean Windows/human
+  acceptance procedures. Keep 0.2.0.dev1 until release gates are satisfied.
+
+Earlier entries below are historical checkpoint measurements, not current status.
+
 ## 0.2.0.dev1 — Holmes desktop development checkpoint, 2026-10-10
 
 - Preserve full-session review, evidence capsules, comparison and the append-only

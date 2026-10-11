@@ -1,5 +1,11 @@
 # Architecture
 
+Engineering qualification is separate from observation and interpretation:
+[continuous qualification](CONTINUOUS_QUALIFICATION.md) defines the synthetic CI
+boundary, recovery checks and release gates. The
+[clean Windows acceptance procedure](CLEAN_WINDOWS_ACCEPTANCE.md) supplies the
+independent product checks that automated widget tests cannot establish.
+
 Mission 005 adds an external software qualification boundary and a validated
 [capability inventory](../capabilities/apm-capabilities-v1.json). It changes neither
 evidence serialization nor source observation. See the
